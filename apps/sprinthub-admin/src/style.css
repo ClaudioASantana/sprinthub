@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Brand Colors - High contrast modern palette */
+  --color-primary: hsl(230, 100%, 65%);
+  --color-primary-hover: hsl(230, 100%, 75%);
+  --color-accent: hsl(280, 100%, 65%);
+  
+  /* Dark Mode Base */
+  --color-bg-base: hsl(220, 20%, 8%);
+  --color-bg-surface: hsla(220, 20%, 15%, 0.6);
+  --color-bg-elevated: hsla(220, 20%, 20%, 0.8);
+  
+  /* Glassmorphism Details */
+  --glass-border: 1px solid hsla(0, 0%, 100%, 0.08);
+  --glass-shadow: 0 8px 32px 0 hsla(0, 0%, 0%, 0.37);
+  --glass-blur: blur(16px);
+  
+  /* Text details */
+  --color-text-primary: hsl(0, 0%, 100%);
+  --color-text-secondary: hsl(220, 10%, 70%);
+  --color-text-muted: hsl(220, 10%, 50%);
+
+  /* Typography */
+  --font-family-base: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family-base);
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(230,100%,65%, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(280,100%,65%, 0.15) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+a:hover {
+  filter: brightness(1.2);
+}
+
+/* Glass panel utility class */
+.glass-panel {
+  background: var(--color-bg-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+}
+
+/* Core Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition-smooth);
+  font-family: var(--font-family-base);
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  color: white;
+  box-shadow: 0 4px 15px hsla(230, 100%, 65%, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px hsla(230, 100%, 65%, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Base form inputs */
+.input-base {
+  width: 100%;
+  background: hsla(220, 20%, 10%, 0.5);
+  border: 1px solid hsla(0, 0%, 100%, 0.1);
+  color: var(--color-text-primary);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-family: var(--font-family-base);
+  transition: var(--transition-smooth);
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px hsla(230, 100%, 65%, 0.2);
+}
