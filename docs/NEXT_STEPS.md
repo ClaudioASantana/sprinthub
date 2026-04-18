@@ -1,32 +1,22 @@
 # SprintHub - Contexto & Próximos Passos (Handoff)
 
-> Este arquivo centraliza o contexto onde paramos para que possamos retomar facilmente quando você abrir a pasta raiz do `sprinthub` no seu novo Workspace.
+> Este arquivo centraliza o contexto de onde paramos, servindo como ponto de partida rápido para novas sprints.
 
 ## 📌 Estado Atual
-Toda a infraestrutura do **Monorepo (pnpm)** já foi gerada com sucesso:
-- `apps/frontend/` -> Aplicação Vue instanciada usando o Vite-cli (Vue-ts, Router, Pinia, ESLint).
-- `apps/backend/` -> Backend instanciado usando o NestJS CLI oficial.
-- `packages/shared/` -> Pasta base para receber nossos contratos de tipagem e interfaces entre back e front.
-- `docs/` -> Estruturado para o SDD@(`stories/`, `specs/`, e `architecture/initial-implementation-plan.md`).
-- `AIOS (.aios-core & AGENTS.md) -> A sua infraestrutura de Agentes foi clonada da agência para cá com sucesso.
----
+O MVP do SprintHub está **COMPLETO e TESTADO**. As features de 001 a 010 (Gestão de Projetos, Autenticação, Kanban Básico e Monorepo) compilam com sucesso e o TypeScript está saudável.
 
-## �@ Como Retomar no Novo Workspace?
+## 🚀 Como Retomar no Espaço de Trabalho
 
-### Passo 1: Inicialize o projeto
-Abra um terminal na raiz (`/home/amorim/repos/sprinthub`) e rode:
-``bash
-pnpm install
-```
-*Isso fará o lockfile inicial do monorepo ser criado e baixará em paralelo todas as dependências do NestJS e Vue unificando por hard-links.*
-### Passo 2: Teste básico
-Se quiser validar que a infra base respira:
+### Passo 1: Instalar & Checar a base
 ```bash
+pnpm install
 pnpm -r --parallel dev
 ```
 
-### Passo 3: Criar nossa Primeira Story (SDD)
-Inicie uma nova conversa comigo (ou referencie o `@pm` / `@architect`) e diga:
-> *"Vamos começar a primeira story do SprintHub."*
+### O Que Foi Feito (Última Sessão - Deploy e Infra)
+- **Story 011 (Concluída):** Banco PostgreSQL migrado com sucesso para o servidor Cloud (Coolify). O ambiente de dev local agora insere no banco remoto partilhado.
+- **Story 012 (Concluída):** Scripts do Backend (`apps/backend/package.json`) e configurações de engine (`nixpacks.toml`) reestruturados. A API NestJS está pronta para gerar os conectores binários e fazer as migrações (Zero-Downtime deploy) passivamente por CI/CD.
 
-Criaremos o primeiro arquivo dentro de `docs/stories/`, definindo o domínio central da nossa aplicação (por exemplo, "Gestão de Equipes" ou "Autenticação Core") antes de colocar a mão em regras de negócio no backend ou templates no Vue!
+### O Que Fazer Quando Voltar (Próximos Passos)
+1. **(Opcional) Teste de Fogo (Story 012)**: Fazer o roteiro manual pelo Painel Visual do Coolify, linkar com o GitHub e clicar em Deploy para verificar se o Nixpacks constrói perfeitamente o nosso container na nuvem.
+2. **Nova Fronteira (Story 013)**: Voltar o foco para "Pintar a Parede". Podemos ir para as UI/UX do Kanban (Frontend), ou começar de fato as lógicas vitais do nosso Backlog (Épicos, Sprints e Tarefas na tela).

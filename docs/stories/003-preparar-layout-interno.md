@@ -20,7 +20,7 @@ O objetivo desta etapa é transformar o `DashboardLayout.vue` atual (que possui 
 - `/dashboard` continuará renderizando o `DashboardLayout`, contudo seu `children: [{ path: '', name: 'Overview', component: DashboardOverview }]` injetará também o sumário na vista padrão.
 
 ## Critérios de Aceite
-- [ ] O `/dashboard` funciona como App Shell, tendo um `<router-view>` interno.
-- [ ] O acesso direto a `/dashboard` renderiza o componente `DashboardOverview.vue`.
-- [ ] O menu de navegação lateral utiliza `<router-link>` e indica a tela ativa corretamente.
-- [ ] O cabeçalho exibe as informações dinâmicas do usuário lidas do JWT logado.
+- [x] O `/dashboard` funciona como App Shell, tendo um `<router-view>` interno.
+- [x] O acesso direto a `/dashboard` renderiza o componente `DashboardOverview.vue`.
+- [x] O menu de navegação lateral utiliza `<router-link>` e indica a tela ativa corretamente.
+- [x] O cabeçalho exibe as informações dinâmicas do usuário lidas do JWT logado.

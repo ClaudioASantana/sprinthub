@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_BASE_URL, LoginResponse, parseJwt } from '../services/api'
+import { API_BASE_URL, parseJwt, type LoginResponse } from '../services/api'
 
 const router = useRouter()
 const isConnecting = ref(false)

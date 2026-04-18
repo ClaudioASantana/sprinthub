@@ -62,4 +62,5 @@ Interprete os atalhos abaixo carregando o arquivo correspondente em `.aios-core/
 - `@ux-design-expert`, `/ux-design-expert`, `/ux-design-expert.md` -> `.aios-core/development/agents/ux-design-expert.md`
 - `@squad-creator`, `/squad-creator`, `/squad-creator.md` -> `.aios-core/development/agents/squad-creator.md`
 - `@aios-master`, `/aios-master`, `/aios-master.md` -> `.aios-core/development/agents/aios-master.md`
+- `@sprinthub`, `/sprinthub`, `/sprinthub.md` -> `.codex/skills/aios-sprinthub.md`
 <!-- AIOS-MANAGED-END: shortcuts -->

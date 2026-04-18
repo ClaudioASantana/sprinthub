@@ -1,0 +1,38 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  },
+  "capabilities": {
+    "github": {
+      "repository": "amorim/sprinthub",
+      "maxItems": 50
+    }
+  },
+  "tools": {
+    "repository": {
+      "enabled": true,
+      "description": "GitHub repository operations"
+    },
+    "issues": {
+      "enabled": true,
+      "description": "GitHub issues CRUD"
+    },
+    "pulls": {
+      "enabled": true,
+      "description": "Pull requests operations"
+    },
+    "actions": {
+      "enabled": true,
+      "description": "GitHub Actions workflows"
+    }
+  }
+}
