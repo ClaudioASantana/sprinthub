@@ -27,7 +27,17 @@ export class CompaniesController {
   }
 
   @Post()
-  create(@Body() body: { name: string; cnpj: string; responsible: string; email: string }) {
+  create(
+    @Body()
+    body: {
+      name: string;
+      cnpj: string;
+      responsible: string;
+      email: string;
+      ownerEmail?: string;
+      ownerName?: string;
+    },
+  ) {
     return this.companiesService.create(body);
   }
 
@@ -35,7 +45,13 @@ export class CompaniesController {
   update(
     @Param('id') id: string,
     @Body()
-    body: Partial<{ name: string; cnpj: string; responsible: string; email: string; active: boolean }>,
+    body: Partial<{
+      name: string;
+      cnpj: string;
+      responsible: string;
+      email: string;
+      active: boolean;
+    }>,
   ) {
     return this.companiesService.update(id, body);
   }

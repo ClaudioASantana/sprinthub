@@ -6,9 +6,12 @@ import { Team } from '@prisma/client';
 export class TeamsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(companyId?: string): Promise<Team[]> {
+  async findAll(companyId?: string) {
     const where = companyId ? { companyId, active: true } : { active: true };
-    return this.prisma.team.findMany({ where });
+    return this.prisma.team.findMany({
+      where,
+      include: { members: true },
+    });
   }
 
   async findOne(id: string): Promise<Team> {
@@ -34,5 +37,19 @@ export class TeamsService {
 
   async remove(id: string): Promise<void> {
     await this.prisma.team.update({ where: { id }, data: { active: false } });
+  }
+
+  async addMember(teamId: string, userId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { teamId },
+    });
+  }
+
+  async removeMember(teamId: string, userId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { teamId: null },
+    });
   }
 }

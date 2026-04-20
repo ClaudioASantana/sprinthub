@@ -2,10 +2,10 @@
   <div class="teams-page">
     <div class="page-header">
       <h1>Equipes</h1>
-      <button class="btn-primary" @click="openModal()">+ Nova Equipe</button>
+      <button class="btn btn-primary" @click="openModal()">+ Nova Equipe</button>
     </div>
-    <div class="table-container">
-      <table>
+    <div class="table-container glass-panel">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Nome</th>
@@ -36,25 +36,21 @@
       <p v-if="teams.length === 0" class="empty-state">Nenhuma equipe encontrada.</p>
     </div>
 
-    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-      <div class="modal">
-        <h2>{{ editingTeam ? 'Editar Equipe' : 'Nova Equipe' }}</h2>
-        <form @submit.prevent="saveTeam">
-          <div class="form-group">
-            <label>Nome</label>
-            <input v-model="form.name" type="text" required />
-          </div>
-          <div class="form-group">
-            <label>Descrição</label>
-            <textarea v-model="form.description" rows="3"></textarea>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="showModal = false">Cancelar</button>
-            <button type="submit" class="btn-primary">Salvar</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- Drawer de Nova Equipe -->
+    <GlassDrawer :isOpen="showModal" @close="closeModal" title="Criar Nova Equipe">
+      <form @submit.prevent="createTeam" class="drawer-form">
+        <div class="form-group">
+          <label>Nome da Equipe</label>
+          <input v-model="form.name" type="text" required placeholder="Ex: Produto e Design" class="dark-input" />
+        </div>
+        <div class="drawer-actions mt-4">
+          <button type="button" class="btn btn-outline" @click="closeModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" :disabled="loading">
+            {{ loading ? 'Criando...' : 'Salvar Equipe' }}
+          </button>
+        </div>
+      </form>
+    </GlassDrawer>
 
     <div v-if="showMembersModal" class="modal-overlay" @click.self="showMembersModal = false">
       <div class="modal">
@@ -75,7 +71,7 @@
           </div>
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn-secondary" @click="showMembersModal = false">Fechar</button>
+          <button type="button" class="btn btn-outline" @click="showMembersModal = false">Fechar</button>
         </div>
       </div>
     </div>
@@ -83,7 +79,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue'
+import GlassDrawer from '../components/GlassDrawer.vue';
+import { parseJwt } from '../utils/jwt';
 
 interface Team {
   id: string;
@@ -97,22 +95,31 @@ interface Team {
 const teams = ref<Team[]>([]);
 const showModal = ref(false);
 const showMembersModal = ref(false);
+const loading = ref(false);
 const selectedTeam = ref<Team | null>(null);
 const editingTeam = ref<Team | null>(null);
 const form = ref({ name: '', description: '' });
 
-const availableUsers = ref([
-  { id: 'u1', name: 'João Silva' },
-  { id: 'u2', name: 'Maria Santos' },
-  { id: 'u3', name: 'Pedro Costa' },
-  { id: 'u4', name: 'Ana Oliveira' },
-  { id: 'u5', name: 'Bruno Lima' },
-]);
+const availableUsers = ref<any[]>([]);
+
+const getCompanyId = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return '';
+  const payload = parseJwt(token);
+  return payload?.companyId || '';
+};
 
 const fetchTeams = async () => {
   try {
-    const res = await fetch('/api/teams?companyId=1');
-    if (res.ok) teams.value = await res.json();
+    const companyId = getCompanyId();
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/teams?companyId=${companyId}`);
+    if (res.ok) {
+      const rawTeams = await res.json();
+      teams.value = rawTeams.map((t: any) => ({
+        ...t,
+        members: t.members ? t.members.map((m: any) => m.id || m) : []
+      }));
+    }
   } catch {
     teams.value = [];
   }
@@ -129,14 +136,20 @@ const openModal = (team?: Team) => {
   showModal.value = true;
 };
 
-const saveTeam = async () => {
+const closeModal = () => {
+  showModal.value = false;
+};
+
+const createTeam = async () => {
+  loading.value = true;
   try {
-    const url = editingTeam.value ? `/api/teams/${editingTeam.value.id}` : '/api/teams';
+    const baseUrl = import.meta.env.VITE_API_URL || '';
+    const url = editingTeam.value ? `${baseUrl}/api/teams/${editingTeam.value.id}` : `${baseUrl}/api/teams`;
     const method = editingTeam.value ? 'PATCH' : 'POST';
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form.value, companyId: '1' }),
+      body: JSON.stringify({ ...form.value, companyId: getCompanyId() }),
     });
     if (res.ok) {
       showModal.value = false;
@@ -144,12 +157,14 @@ const saveTeam = async () => {
     }
   } catch (e) {
     console.error(e);
+  } finally {
+    loading.value = false;
   }
 };
 
 const deleteTeam = async (id: string) => {
   if (confirm('Tem certeza que deseja excluir?')) {
-    await fetch(`/api/teams/${id}`, { method: 'DELETE' });
+    await fetch((import.meta.env.VITE_API_URL || '') + `/api/teams/${id}`, { method: 'DELETE' });
     fetchTeams();
   }
 };
@@ -161,7 +176,7 @@ const openMembersModal = (team: Team) => {
 
 const addMember = async (userId: string) => {
   if (!selectedTeam.value) return;
-  await fetch(`/api/teams/${selectedTeam.value.id}/members`, {
+  await fetch((import.meta.env.VITE_API_URL || '') + `/api/teams/${selectedTeam.value.id}/members`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId }),
@@ -172,111 +187,40 @@ const addMember = async (userId: string) => {
 
 const removeMember = async (userId: string) => {
   if (!selectedTeam.value) return;
-  await fetch(`/api/teams/${selectedTeam.value.id}/members/${userId}`, {
+  await fetch((import.meta.env.VITE_API_URL || '') + `/api/teams/${selectedTeam.value.id}/members/${userId}`, {
     method: 'DELETE',
   });
   fetchTeams();
   selectedTeam.value = { ...selectedTeam.value, members: selectedTeam.value.members.filter(m => m !== userId) };
 };
 
-onMounted(fetchTeams);
+const fetchUsers = async () => {
+  try {
+    const companyId = getCompanyId();
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/users?companyId=${companyId}`);
+    if (res.ok) availableUsers.value = await res.json();
+  } catch {
+    availableUsers.value = [];
+  }
+};
+
+onMounted(() => {
+  fetchTeams();
+  fetchUsers();
+});
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.page-header h1 { color: #1a1a2e; }
-
-.btn-primary {
-  background: #4f46e5;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.btn-secondary {
-  background: #e5e5e5;
-  color: #333;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.table-container {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #e5e5e5;
-}
-
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 16px; text-align: left; border-bottom: 1px solid #e5e5e5; }
-th { background: #f8f9fa; font-weight: 600; }
-
 .status {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-}
-.status.active { background: #d1fae5; color: #065f46; }
-.status.inactive { background: #fee2e2; color: #991b1b; }
-
-.btn-icon {
-  background: none;
-  border: none;
-  color: #4f46e5;
-  cursor: pointer;
-  margin-right: 8px;
-}
-.btn-icon.danger { color: #dc2626; }
-
-.empty-state {
-  text-align: center;
-  padding: 24px;
-  color: #666;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal {
-  background: #fff;
-  padding: 24px;
-  border-radius: 12px;
-  width: 400px;
-}
-
-.modal h2 { margin-bottom: 16px; }
-
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; margin-bottom: 4px; font-weight: 500; }
-.form-group input, .form-group textarea {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #e5e5e5;
+  padding: 4px 10px;
   border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
-
-.modal-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 16px;
-}
+.status.active { background: rgba(16, 185, 129, 0.1); color: #34d399; }
+.status.inactive { background: rgba(239, 68, 68, 0.1); color: #f87171; }
 
 .members-list {
   max-height: 300px;
@@ -287,8 +231,9 @@ th { background: #f8f9fa; font-weight: 600; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px;
-  border-bottom: 1px solid #e5e5e5;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--color-text-primary);
 }
 
 .btn-add, .btn-remove {
@@ -298,15 +243,34 @@ th { background: #f8f9fa; font-weight: 600; }
   border: none;
   cursor: pointer;
   font-weight: bold;
+  transition: all 0.2s;
 }
 
 .btn-add {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
 }
+.btn-add:hover { background: rgba(16, 185, 129, 0.2); }
 
 .btn-remove {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+.btn-remove:hover { background: rgba(239, 68, 68, 0.2); }
+
+.mt-6 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 1rem; }
+
+.drawer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.drawer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
 }
 </style>

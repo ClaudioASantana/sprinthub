@@ -17,8 +17,31 @@ export class CompaniesService {
     });
   }
 
-  async create(data: Prisma.CompanyCreateInput): Promise<Company> {
-    return this.prisma.company.create({ data });
+  async create(
+    data: Prisma.CompanyCreateInput & {
+      ownerEmail?: string;
+      ownerName?: string;
+    },
+  ): Promise<Company> {
+    const { ownerEmail, ownerName, ...companyData } = data;
+
+    // Transação para criar a Empresa e o Titular simultaneamente
+    return this.prisma.$transaction(async (tx) => {
+      const company = await tx.company.create({ data: companyData });
+
+      if (ownerEmail && ownerName) {
+        await tx.user.create({
+          data: {
+            email: ownerEmail,
+            name: ownerName,
+            role: 'admin',
+            companyId: company.id,
+          },
+        });
+      }
+
+      return company;
+    });
   }
 
   async update(

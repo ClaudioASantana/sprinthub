@@ -49,6 +49,19 @@ const handleLogin = async () => {
     isConnecting.value = false
   }
 }
+
+const handleDevLogin = () => {
+  // Simulando um JWT válido com a claim de super_admin para o SprintHub Admin
+  const fakeToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." + 
+    btoa(JSON.stringify({
+      nome: "Super Admin (Dev)",
+      email: "admin@sprinthub.com",
+      roles: { sprinthub: "super_admin" }
+    })) + ".signatureMock"
+
+  localStorage.setItem('sprinthub_admin_token', fakeToken)
+  router.push('/dashboard')
+}
 </script>
 
 <template>
@@ -87,6 +100,9 @@ const handleLogin = async () => {
 
       <div class="footer">
         <p>Acesso restrito à equipe raiz.</p>
+        <button type="button" class="btn btn-outline dev-btn" @click="handleDevLogin" style="margin-top: 1rem; width: 100%;">
+          🛠️ Dev Bypass (Entrar Direto)
+        </button>
       </div>
     </div>
   </div>

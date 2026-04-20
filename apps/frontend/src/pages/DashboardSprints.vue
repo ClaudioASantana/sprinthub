@@ -5,10 +5,10 @@
         <button class="btn-back" @click="$router.push('/dashboard/projects')">← Voltar</button>
         <h1>Sprints - {{ projectName }}</h1>
       </div>
-      <button class="btn-primary" @click="openModal()">+ Novo Sprint</button>
+      <button class="btn btn-primary" @click="openModal()">+ Novo Sprint</button>
     </div>
     <div class="sprints-grid">
-      <div v-for="sprint in sprints" :key="sprint.id" class="sprint-card">
+      <div v-for="sprint in sprints" :key="sprint.id" class="sprint-card glass-panel">
         <div class="sprint-header">
           <h3>{{ sprint.name }}</h3>
           <span :class="['status', 'status-' + sprint.status]">
@@ -30,50 +30,52 @@
       <p v-if="sprints.length === 0" class="empty-state">Nenhum sprint encontrado.</p>
     </div>
 
-    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-      <div class="modal">
-        <h2>{{ editingSprint ? 'Editar Sprint' : 'Novo Sprint' }}</h2>
-        <form @submit.prevent="saveSprint">
-          <div class="form-group">
-            <label>Nome</label>
-            <input v-model="form.name" type="text" required placeholder="Ex: Sprint 1" />
-          </div>
-          <div class="form-group">
-            <label>Objetivo</label>
-            <textarea v-model="form.goal" rows="2" placeholder="Qual o objetivo deste sprint?"></textarea>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Data Início</label>
-              <input v-model="form.startDate" type="date" required />
-            </div>
-            <div class="form-group">
-              <label>Data Fim</label>
-              <input v-model="form.endDate" type="date" required />
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Status</label>
-            <select v-model="form.status">
-              <option value="planning">Planning</option>
-              <option value="active">Ativo</option>
-              <option value="completed">Concluído</option>
-              <option value="cancelled">Cancelado</option>
-            </select>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="showModal = false">Cancelar</button>
-            <button type="submit" class="btn-primary">Salvar</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- Drawer Nova Sprint -->
+    <GlassDrawer :isOpen="showModal" @close="closeModal" title="Criar Nova Sprint">
+      <form @submit.prevent="saveSprint" class="drawer-form">
+        <div class="form-group">
+          <label>Nome da Sprint</label>
+          <input v-model="form.name" type="text" required placeholder="Ex: Sprint 42" class="dark-input" />
+        </div>
+        
+        <div class="form-group">
+          <label>Objetivo</label>
+          <textarea v-model="form.goal" rows="2" class="dark-input" placeholder="Qual o objetivo deste sprint?"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Data de Início</label>
+          <input v-model="form.startDate" type="date" required class="dark-input" />
+        </div>
+        
+        <div class="form-group">
+          <label>Data de Fim</label>
+          <input v-model="form.endDate" type="date" required class="dark-input" />
+        </div>
+
+        <div class="form-group">
+          <label>Status</label>
+          <select v-model="form.status" class="dark-input">
+            <option value="planning">Planning</option>
+            <option value="active">Ativo</option>
+            <option value="completed">Concluído</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+        </div>
+
+        <div class="drawer-actions mt-4">
+          <button type="button" class="btn btn-outline" @click="closeModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Sprint</button>
+        </div>
+      </form>
+    </GlassDrawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
+import GlassDrawer from '../components/GlassDrawer.vue';
 
 interface Sprint {
   id: string;
@@ -114,7 +116,7 @@ const formatDate = (date?: string) => {
 
 const fetchSprints = async () => {
   try {
-    const res = await fetch(`/api/sprints?projectId=${projectId.value}`);
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/sprints?projectId=${projectId.value}`);
     if (res.ok) sprints.value = await res.json();
   } catch {
     sprints.value = [];
@@ -138,6 +140,10 @@ const openModal = (sprint?: Sprint) => {
   showModal.value = true;
 };
 
+const closeModal = () => {
+  showModal.value = false;
+};
+
 const saveSprint = async () => {
   try {
     const url = editingSprint.value ? `/api/sprints/${editingSprint.value.id}` : '/api/sprints';
@@ -158,7 +164,7 @@ const saveSprint = async () => {
 
 const deleteSprint = async (id: string) => {
   if (confirm('Tem certeza que deseja excluir?')) {
-    await fetch(`/api/sprints/${id}`, { method: 'DELETE' });
+    await fetch((import.meta.env.VITE_API_URL || '') + `/api/sprints/${id}`, { method: 'DELETE' });
     fetchSprints();
   }
 };
@@ -167,51 +173,21 @@ onMounted(fetchSprints);
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.page-header > div { display: flex; align-items: center; gap: 16px; }
-.btn-back {
-  background: none;
-  border: none;
-  color: #4f46e5;
-  cursor: pointer;
-  font-size: 14px;
-}
-.page-header h1 { color: #1a1a2e; margin: 0; }
-
-.btn-primary {
-  background: #4f46e5;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.btn-secondary {
-  background: #e5e5e5;
-  color: #333;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
 .sprints-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  gap: 20px;
 }
 
 .sprint-card {
-  background: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 12px;
-  padding: 20px;
+  padding: 24px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sprint-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-sm);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .sprint-header {
@@ -220,95 +196,66 @@ onMounted(fetchSprints);
   align-items: center;
   margin-bottom: 12px;
 }
-.sprint-header h3 { margin: 0; color: #1a1a2e; }
+.sprint-header h3 { margin: 0; color: var(--color-text-primary); font-size: 18px; font-weight: 600; }
 
 .status {
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
 }
-.status-planning { background: #fef3c7; color: #92400e; }
-.status-active { background: #d1fae5; color: #065f46; }
-.status-completed { background: #e5e5e5; color: #666; }
-.status-cancelled { background: #fee2e2; color: #991b1b; }
+.status-planning { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border-color: rgba(245, 158, 11, 0.2); }
+.status-active { background: rgba(16, 185, 129, 0.1); color: #34d399; border-color: rgba(16, 185, 129, 0.2); }
+.status-completed { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border-color: rgba(148, 163, 184, 0.2); }
+.status-cancelled { background: rgba(239, 68, 68, 0.1); color: #f87171; border-color: rgba(239, 68, 68, 0.2); }
 
 .sprint-goal {
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 14px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  line-height: 1.5;
 }
 
 .sprint-dates {
   font-size: 12px;
-  color: #888;
-  margin-bottom: 8px;
+  color: #64748b;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .sprint-stats {
-  font-size: 12px;
-  color: #4f46e5;
+  font-size: 13px;
+  color: var(--neon-blue);
   font-weight: 500;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: rgba(0, 112, 243, 0.1);
+  border-radius: 8px;
+  display: inline-block;
 }
 
 .sprint-actions {
   display: flex;
   gap: 8px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
 }
 
-.btn-icon {
-  background: none;
-  border: none;
-  color: #4f46e5;
-  cursor: pointer;
-  font-size: 13px;
-}
-.btn-icon.danger { color: #dc2626; }
+.mt-4 { margin-top: 1rem; }
 
-.empty-state {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 48px;
-  color: #666;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
+.drawer-form {
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal {
-  background: #fff;
-  padding: 24px;
-  border-radius: 12px;
-  width: 450px;
-}
-
-.modal h2 { margin-bottom: 16px; }
-
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; margin-bottom: 4px; font-weight: 500; }
-.form-group input, .form-group textarea, .form-group select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #e5e5e5;
-  border-radius: 6px;
-}
-
-.form-row {
-  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
-.form-row .form-group { flex: 1; }
 
-.modal-actions {
+.drawer-actions {
   display: flex;
-  gap: 8px;
   justify-content: flex-end;
-  margin-top: 16px;
+  gap: 12px;
+  margin-top: 24px;
 }
 </style>
