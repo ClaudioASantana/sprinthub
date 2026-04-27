@@ -95,9 +95,15 @@ const form = ref({
   role: 'member'
 })
 
-// TODO: In a real app we derive companyId from auth context (JWT).
-// For MVP we mock fetching company ID #1 (the tenant id).
-const TENANT_COMPANY_ID = '1'
+const getCompanyId = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user.companyId || 'company-demo-id';
+  } catch (e) {
+    return 'company-demo-id';
+  }
+}
+const TENANT_COMPANY_ID = getCompanyId()
 
 const fetchUsers = async () => {
   try {

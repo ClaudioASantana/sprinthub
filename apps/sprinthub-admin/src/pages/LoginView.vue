@@ -50,17 +50,28 @@ const handleLogin = async () => {
   }
 }
 
-const handleDevLogin = () => {
-  // Simulando um JWT válido com a claim de super_admin para o SprintHub Admin
-  const fakeToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." + 
-    btoa(JSON.stringify({
-      nome: "Super Admin (Dev)",
-      email: "admin@sprinthub.com",
-      roles: { sprinthub: "super_admin" }
-    })) + ".signatureMock"
+const handleDevLogin = async () => {
+  isConnecting.value = true
+  errorMessage.value = ""
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/dev-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'admin@sprinthub.com', role: 'super_admin' }),
+    });
+    
+    if (!res.ok) {
+      throw new Error("Erro no Dev Login (Backend indisponível?)")
+    }
 
-  localStorage.setItem('sprinthub_admin_token', fakeToken)
-  router.push('/dashboard')
+    const data = await res.json();
+    localStorage.setItem('sprinthub_admin_token', data.access_token)
+    router.push('/dashboard')
+  } catch (err: any) {
+    errorMessage.value = err.message
+  } finally {
+    isConnecting.value = false
+  }
 }
 </script>
 

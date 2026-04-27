@@ -49,10 +49,15 @@
             <div class="card-badges">
               <span :class="['badge-type', 'type-' + task.type]">{{ typeLabels[task.type] || task.type }}</span>
               <span :class="['badge-priority', 'priority-' + task.priority]">{{ priorityLabels[task.priority] || task.priority }}</span>
-              <span v-if="task.assignee" class="card-avatar" :title="task.assignee.name">{{ task.assignee.name.charAt(0).toUpperCase() }}</span>
             </div>
             <h4>{{ task.title }}</h4>
             <p v-if="task.description">{{ truncate(task.description, 60) }}</p>
+            <div class="card-footer" v-if="task.assignee">
+              <div class="card-assignee" :title="'Responsável: ' + task.assignee.name">
+                <div class="card-avatar">{{ task.assignee.name.charAt(0).toUpperCase() }}</div>
+                <span class="card-assignee-name">{{ task.assignee.name.split(' ')[0] }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -85,10 +90,15 @@
             <div class="card-badges">
               <span :class="['badge-type', 'type-' + task.type]">{{ typeLabels[task.type] || task.type }}</span>
               <span :class="['badge-priority', 'priority-' + task.priority]">{{ priorityLabels[task.priority] || task.priority }}</span>
-              <span v-if="task.assignee" class="card-avatar" :title="task.assignee.name">{{ task.assignee.name.charAt(0).toUpperCase() }}</span>
             </div>
             <h4>{{ task.title }}</h4>
             <p v-if="task.description">{{ truncate(task.description, 60) }}</p>
+            <div class="card-footer" v-if="task.assignee">
+              <div class="card-assignee" :title="'Responsável: ' + task.assignee.name">
+                <div class="card-avatar">{{ task.assignee.name.charAt(0).toUpperCase() }}</div>
+                <span class="card-assignee-name">{{ task.assignee.name.split(' ')[0] }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -121,10 +131,15 @@
             <div class="card-badges">
               <span :class="['badge-type', 'type-' + task.type]">{{ typeLabels[task.type] || task.type }}</span>
               <span :class="['badge-priority', 'priority-' + task.priority]">{{ priorityLabels[task.priority] || task.priority }}</span>
-              <span v-if="task.assignee" class="card-avatar" :title="task.assignee.name">{{ task.assignee.name.charAt(0).toUpperCase() }}</span>
             </div>
             <h4 class="strikethrough">{{ task.title }}</h4>
             <p v-if="task.description">{{ truncate(task.description, 60) }}</p>
+            <div class="card-footer" v-if="task.assignee">
+              <div class="card-assignee" :title="'Responsável: ' + task.assignee.name">
+                <div class="card-avatar">{{ task.assignee.name.charAt(0).toUpperCase() }}</div>
+                <span class="card-assignee-name">{{ task.assignee.name.split(' ')[0] }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -155,7 +170,7 @@
             <div class="form-group">
               <label>Responsável</label>
               <select v-model="activeTaskData.assigneeId" class="form-control" :disabled="!isCreating && !editMode">
-                <option :value="undefined">Não atribuído</option>
+                <option :value="null">Não atribuído</option>
                 <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
               </select>
             </div>
@@ -296,7 +311,7 @@ const fetchData = async () => {
       fetch((import.meta.env.VITE_API_URL || '') + `/api/projects/${projectId.value}`, { headers: { Authorization: `Bearer ${token}` } }),
       fetch((import.meta.env.VITE_API_URL || '') + taskUrl, { headers: { Authorization: `Bearer ${token}` } }),
       fetch((import.meta.env.VITE_API_URL || '') + `/api/sprints?projectId=${projectId.value}`, { headers: { Authorization: `Bearer ${token}` } }),
-      fetch((import.meta.env.VITE_API_URL || '') + `/api/users?companyId=1`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch((import.meta.env.VITE_API_URL || '') + `/api/users?companyId=${companyId}`, { headers: { Authorization: `Bearer ${token}` } }),
     ]);
     if (projRes.ok) project.value = await projRes.json();
     if (tasksRes.ok) tasks.value = await tasksRes.json();
@@ -578,18 +593,48 @@ onMounted(fetchData);
 .priority-medium { background: rgba(234, 179, 8, 0.1); color: #fde047; }
 .priority-high { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
 
+.card-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.card-assignee {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 10px 4px 4px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.card-assignee:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 .card-avatar {
-  background: var(--neon-blue);
+  background: linear-gradient(135deg, #0070F3, #3B82F6);
   color: white;
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 10px;
-  font-weight: bold;
-  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 112, 243, 0.3);
+}
+
+.card-assignee-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
 }
 
 .task-card h4 { margin: 0 0 6px; font-size: 14px; color: var(--color-text-primary); line-height: 1.4; }

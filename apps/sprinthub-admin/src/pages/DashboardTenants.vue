@@ -79,6 +79,18 @@
         </div>
       </form>
     </GlassDrawer>
+
+    <!-- Toast Notifications -->
+    <Transition name="toast">
+      <div v-if="toast.show" class="toast" :class="toast.type">
+        <span class="toast-icon">{{ toast.type === 'error' ? '⚠️' : '✅' }}</span>
+        <div class="toast-content">
+          <h4 class="toast-title">{{ toast.title }}</h4>
+          <p class="toast-message">{{ toast.message }}</p>
+        </div>
+        <button class="toast-close" @click="toast.show = false">×</button>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -90,6 +102,23 @@ const companies = ref<any[]>([])
 const showModal = ref(false)
 const loading = ref(false)
 
+const toast = ref({
+  show: false,
+  title: '',
+  message: '',
+  type: 'success' as 'success' | 'error'
+})
+
+let toastTimeout: any = null
+
+const showToast = (title: string, message: string, type: 'success' | 'error' = 'success') => {
+  toast.value = { show: true, title, message, type }
+  if (toastTimeout) clearTimeout(toastTimeout)
+  toastTimeout = setTimeout(() => {
+    toast.value.show = false
+  }, 5000)
+}
+
 const form = ref({
   name: '',
   cnpj: '',
@@ -99,12 +128,22 @@ const form = ref({
 
 const fetchCompanies = async () => {
   try {
-    const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/companies');
+    const token = localStorage.getItem('sprinthub_admin_token')
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/companies', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     if (res.ok) {
       companies.value = await res.json()
+    } else if (res.status === 401 || res.status === 403) {
+      showToast('Sessão expirada', 'Sua sessão expirou. Redirecionando para o login...', 'error')
+      localStorage.removeItem('sprinthub_admin_token')
+      setTimeout(() => { window.location.href = '/' }, 1500)
     }
   } catch (err) {
     console.error('Erro ao buscar empresas', err)
+    showToast('Erro', 'Não foi possível carregar a lista de empresas.', 'error')
   }
 }
 
@@ -121,22 +160,26 @@ const createTenant = async () => {
       ownerName: form.value.ownerName
     }
 
+    const token = localStorage.getItem('sprinthub_admin_token')
     const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/companies', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
     })
 
     if (res.ok) {
-      await fetchCompanies()
+      showToast('Sucesso!', 'A nova empresa foi provisionada e o titular criado.', 'success')
       closeModal()
+      await fetchCompanies()
     } else {
-      alert('Erro ao criar empresa')
+      const errData = await res.json().catch(() => ({}))
+      showToast('Atenção', errData.message || res.statusText, 'error')
     }
-  } catch (err) {
-    console.error('Falha de conexão', err)
+  } catch (error: any) {
+    showToast('Erro de Conexão', error.message, 'error')
   } finally {
     loading.value = false
   }
@@ -320,5 +363,79 @@ onMounted(() => {
   font-size: 0.8rem;
   color: #6d758c;
   margin-bottom: 1rem;
+}
+
+/* Toast Animations & Styles (Shadcn UI inspired) */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+  color: #f8fafc;
+  min-width: 300px;
+  max-width: 400px;
+  z-index: 9999;
+}
+.toast.error {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: #1a1014;
+}
+.toast.success {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: #0f1c16;
+}
+
+.toast-icon {
+  font-size: 1.2rem;
+  margin-top: 2px;
+}
+.toast-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.toast-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.toast-message {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+.toast-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.toast-close:hover {
+  color: #f8fafc;
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.toast-enter-from {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+}
+.toast-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
 }
 </style>

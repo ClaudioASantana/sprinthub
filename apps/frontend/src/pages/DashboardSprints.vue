@@ -116,7 +116,10 @@ const formatDate = (date?: string) => {
 
 const fetchSprints = async () => {
   try {
-    const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/sprints?projectId=${projectId.value}`);
+    const token = localStorage.getItem('token');
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/sprints?projectId=${projectId.value}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     if (res.ok) sprints.value = await res.json();
   } catch {
     sprints.value = [];
@@ -146,16 +149,23 @@ const closeModal = () => {
 
 const saveSprint = async () => {
   try {
+    const token = localStorage.getItem('token');
     const url = editingSprint.value ? `/api/sprints/${editingSprint.value.id}` : '/api/sprints';
     const method = editingSprint.value ? 'PATCH' : 'POST';
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify({ ...form.value, projectId: projectId.value }),
     });
     if (res.ok) {
       showModal.value = false;
       fetchSprints();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      alert(`Erro: ${err.message || res.statusText}`);
     }
   } catch (e) {
     console.error(e);
@@ -164,7 +174,11 @@ const saveSprint = async () => {
 
 const deleteSprint = async (id: string) => {
   if (confirm('Tem certeza que deseja excluir?')) {
-    await fetch((import.meta.env.VITE_API_URL || '') + `/api/sprints/${id}`, { method: 'DELETE' });
+    const token = localStorage.getItem('token');
+    await fetch((import.meta.env.VITE_API_URL || '') + `/api/sprints/${id}`, { 
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
     fetchSprints();
   }
 };

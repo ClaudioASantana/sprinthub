@@ -51,8 +51,8 @@ export class TeamsController {
   }
 
   @Post(':id/members')
-  addMember(@Param('id') id: string, @Body('userId') userId: string) {
-    return this.teamsService.addMember(id, userId);
+  addMember(@Param('id') id: string, @Body() body: Record<string, any>) {
+    return this.teamsService.addMember(id, body.userId);
   }
 
   @Delete(':id/members/:userId')

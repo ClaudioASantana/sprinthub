@@ -109,13 +109,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import GlassDrawer from '../components/GlassDrawer.vue';
 import { useRoute } from 'vue-router';
 import { parseJwt } from '../utils/jwt';
 
 const route = useRoute();
-const projectId = computed(() => route.query.projectId as string || '1');
+const selectedProjectId = ref<string>(route.query.projectId as string || '');
 const loading = ref(false);
 const projects = ref<any[]>([]);
 
@@ -167,9 +167,10 @@ const getCompanyId = () => {
 };
 
 const fetchBacklog = async () => {
+  if (!selectedProjectId.value) return;
   try {
     const companyId = getCompanyId();
-    const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/tasks?projectId=${projectId.value}&companyId=${companyId}&sprintId=null`);
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/tasks?projectId=${selectedProjectId.value}&companyId=${companyId}&sprintId=null`);
     if (res.ok) {
       backlogTasks.value = await res.json();
     }
@@ -185,6 +186,10 @@ const fetchProjects = async () => {
     const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/projects?companyId=${companyId}`);
     if (res.ok) {
       projects.value = await res.json();
+      if (!selectedProjectId.value && projects.value.length > 0) {
+        selectedProjectId.value = projects.value[0].id;
+        fetchBacklog();
+      }
     }
   } catch (e) {
     console.error(e);
@@ -201,7 +206,7 @@ const quickAddTask = async () => {
       body: JSON.stringify({
         title: quickAddForm.value.title,
         type: quickAddForm.value.type,
-        projectId: projectId.value,
+        projectId: selectedProjectId.value,
         status: 'todo',
         priority: 'medium',
         sprintId: null
@@ -270,18 +275,21 @@ const deleteTask = async (id: string) => {
 
 onMounted(() => {
   fetchProjects();
-  fetchBacklog();
+  if (selectedProjectId.value) {
+    fetchBacklog();
+  }
 });
 </script>
 
 <style scoped>
 .quick-add-container {
-  background: #ffffff;
+  background: var(--bg-card, #1a1825);
+  backdrop-filter: blur(8px);
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 24px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  box-shadow: var(--shadow-sm, 0 4px 6px rgba(0,0,0,0.05));
 }
 
 .quick-add-form {
@@ -292,34 +300,34 @@ onMounted(() => {
 
 .quick-type-select {
   padding: 10px 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
-  background-color: #f8fafc;
+  background-color: var(--bg-darker, #0d0b14);
   font-weight: 500;
-  color: #475569;
+  color: var(--color-text-primary, #fff);
   outline: none;
 }
 
 .quick-input {
   flex: 1;
   padding: 10px 16px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
-  background-color: #f8fafc;
+  background-color: var(--bg-darker, #0d0b14);
   font-size: 15px;
+  color: var(--color-text-primary, #fff);
   transition: all 0.2s;
 }
 
 .quick-input:focus {
   outline: none;
-  border-color: #4f46e5;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  border-color: var(--neon-blue, #0070F3);
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.2);
 }
 
 .task-title-cell {
   font-weight: 500;
-  color: #0f172a;
+  color: var(--color-text-primary, #fff);
   max-width: 400px;
   white-space: nowrap;
   overflow: hidden;
@@ -330,23 +338,23 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #f1f5f9;
-  color: #475569;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-secondary, #94a3b8);
   padding: 4px 10px;
   border-radius: 16px;
   font-size: 12px;
   font-weight: 600;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
 }
 
-.type-story { background: #dbf4ff; color: #0070f3; }
-.type-epic { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-.type-task { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-.type-bug { background: #fee2e2; color: #dc2626; }
+.type-story { background: rgba(67, 56, 202, 0.2); color: #818cf8; }
+.type-epic { background: rgba(180, 83, 9, 0.2); color: #fbbf24; }
+.type-task { background: rgba(21, 128, 61, 0.2); color: #4ade80; }
+.type-bug { background: rgba(185, 28, 28, 0.2); color: #f87171; }
 
-.priority-low { background: #f1f5f9; color: #64748b; }
-.priority-medium { background: #fef9c3; color: #a16207; }
-.priority-high { background: #fecaca; color: #dc2626; }
+.priority-low { background: rgba(255, 255, 255, 0.1); color: #cbd5e1; }
+.priority-medium { background: rgba(234, 179, 8, 0.1); color: #fde047; }
+.priority-high { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
 
 .drawer-form {
   display: flex;

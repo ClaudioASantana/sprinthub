@@ -28,6 +28,7 @@
             </td>
             <td>{{ formatDate(project.startDate) }}</td>
             <td>
+              <button class="btn-icon" style="color: var(--neon-blue)" @click="$router.push(`/app/project/${project.id}`)">Board</button>
               <button class="btn-icon" @click="openModal(project)">Editar</button>
               <button class="btn-icon danger" @click="deleteProject(project.id)">Excluir</button>
             </td>
