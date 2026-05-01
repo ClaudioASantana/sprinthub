@@ -9,13 +9,13 @@
   PRISMA_CLI_QUERY_ENGINE_TYPE = 'binary'
 
 [phases.install]
-  # Comando Pnpm padrão para instalar libs nativamente
-  cmd = 'pnpm install'
+  # Usa npm de acordo com o package-lock.json
+  cmd = 'npm ci'
 
 [phases.build]
   # Comandos declarados no backend que farão a build do NestJS e gerarão as tipagens do client prisma
-  cmd = 'pnpm run build'
+  cmd = 'npm run build'
 
 [start]
   # Script do package.json que agora contém (npx prisma migrate deploy && node dist/main)
-  cmd = 'pnpm run start:prod'
+  cmd = 'npm run start:prod'
