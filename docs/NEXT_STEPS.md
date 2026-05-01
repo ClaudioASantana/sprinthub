@@ -1,22 +1,28 @@
-# SprintHub - Contexto & Próximos Passos (Handoff)
+# SprintHub - Ponto de Retomada (19/04/2026)
 
-> Este arquivo centraliza o contexto de onde paramos, servindo como ponto de partida rápido para novas sprints.
+## 📌 Onde Paramos
+Você acabou de finalizar um "Code Review & Bug Squashing" intenso no **Frontend Desktop**. 
 
-## 📌 Estado Atual
-O MVP do SprintHub está **COMPLETO e TESTADO**. As features de 001 a 010 (Gestão de Projetos, Autenticação, Kanban Básico e Monorepo) compilam com sucesso e o TypeScript está saudável.
+O que está 100% testado, estável e operacional localmente no momento (Stories 013, 014 e 015):
+1. **Multi-Tenancy Front/Back:** Todo o sistema respeita a variável de quem está logado. Os componentes não criam mais registros hardcoded. O badge da empresa renderiza na sidebar recuperando diretamente o ID via JWT.
+2. **Dashboard Overview:** Métricas cruciais da empresa fluem em tempo real via `GET /stats` utilizando `Promise.all()` c/ Esqueletos (Pulse) de Carregamento.
+3. **AppBoard (Kanban):** Layout avançado (`glass-panel`), relacional c/ `Users (Membros)` da equipe funcionando, e filtros laterais 100% operativos.
+4. **Resolução de Roteamento:** Vite Dev Server com proxy configurado (`vite.config.ts`) mitigando os erros de 404 entre a rede local. Edições de formulários com switch automático para envio via método `PATCH`.
 
-## 🚀 Como Retomar no Espaço de Trabalho
+## 🚀 Próximos Passos Imediatos (Para a Nova Sessão)
 
-### Passo 1: Instalar & Checar a base
-```bash
-pnpm install
-pnpm -r --parallel dev
-```
+Quando você voltar descansado, os próximos passos lógicos serão:
 
-### O Que Foi Feito (Última Sessão - Deploy e Infra)
-- **Story 011 (Concluída):** Banco PostgreSQL migrado com sucesso para o servidor Cloud (Coolify). O ambiente de dev local agora insere no banco remoto partilhado.
-- **Story 012 (Concluída):** Scripts do Backend (`apps/backend/package.json`) e configurações de engine (`nixpacks.toml`) reestruturados. A API NestJS está pronta para gerar os conectores binários e fazer as migrações (Zero-Downtime deploy) passivamente por CI/CD.
+### 1. Testes Restantes & Subida Cloud
+- Você testou Teams e Projects; precisamos dar uma "navegada final" na criação de Tarefas com Assignees e Sprints para atestar 100% e **espetar no Coolify** a build do Frontend (`apps/frontend`).
 
-### O Que Fazer Quando Voltar (Próximos Passos)
-1. **(Opcional) Teste de Fogo (Story 012)**: Fazer o roteiro manual pelo Painel Visual do Coolify, linkar com o GitHub e clicar em Deploy para verificar se o Nixpacks constrói perfeitamente o nosso container na nuvem.
-2. **Nova Fronteira (Story 013)**: Voltar o foco para "Pintar a Parede". Podemos ir para as UI/UX do Kanban (Frontend), ou começar de fato as lógicas vitais do nosso Backlog (Épicos, Sprints e Tarefas na tela).
+### 2. O Backoffice (Admin Super-Admin)
+- Atualmente, você está logando pelo form provisório `/login` (botão de testes `dev-user-1`).
+- O próximo passo macro do SaaS seria construir a camada isolada de onde você (Dono do Sistema) gerencia quais empresas podem acessar o SprintHub.
+
+### 3. Melhorar as "Bordas"
+- Implementação de um módulo visual para exibir os "Membros da Equipe" (Avatares) em cima dos cards na tela do Kanban (Nós só inserimos na estrutura lógica mas falta o badge redondo do avatar).
+
+---
+
+> **Dica Quente:** *Pode iniciar a nova sessão apenas chamando "Continuemos do NEXT_STEPS" ou escolhendo qual dos passos (Cloud, Admin, Avatares) iremos atacar primeiro.*

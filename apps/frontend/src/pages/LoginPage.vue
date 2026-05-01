@@ -5,19 +5,19 @@
         <h1>SprintHub</h1>
         <p>Gestão de Projetos Ágeis</p>
       </div>
-      <div class="login-card">
+      <div class="login-card glass-panel">
         <h2>Bem-vindo</h2>
         <p class="login-subtitle">Entre com sua conta para continuar</p>
         
-        <button class="login-btn" @click="login" :disabled="loading">
+        <button class="login-btn btn btn-primary" @click="login" :disabled="loading">
           <span v-if="loading">Entrando...</span>
           <span v-else>Entrar com Gestão de Acesso</span>
         </button>
 
         <div class="dev-section">
           <p class="dev-label">Desenvolvimento</p>
-          <button class="dev-btn" @click="devLoginSuperAdmin">Entrar como Super Admin</button>
-          <button class="dev-btn" @click="devLoginMember">Entrar como Membro</button>
+          <button class="dev-btn btn btn-outline" @click="devLoginSuperAdmin">Entrar como Super Admin</button>
+          <button class="dev-btn btn btn-outline" @click="devLoginMember">Entrar como Membro</button>
         </div>
 
         <p v-if="error" class="error-message">{{ error }}</p>
@@ -66,7 +66,7 @@ onMounted(() => {
 const devLoginSuperAdmin = async () => {
   loading.value = true;
   try {
-    const res = await fetch('http://localhost:3000/auth/dev-login', {
+    const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/auth/dev-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'admin@sprinthub.com', role: 'super_admin' }),
@@ -84,7 +84,7 @@ const devLoginSuperAdmin = async () => {
 const devLoginMember = async () => {
   loading.value = true;
   try {
-    const res = await fetch('http://localhost:3000/auth/dev-login', {
+    const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/auth/dev-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'user@sprinthub.com', role: 'member' }),
@@ -106,7 +106,9 @@ const devLoginMember = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background-color: var(--bg-dark);
+  background-image: radial-gradient(circle at top right, rgba(0, 112, 243, 0.1), transparent 40%),
+                    radial-gradient(circle at bottom left, rgba(0, 112, 243, 0.05), transparent 40%);
 }
 
 .login-container {
@@ -122,56 +124,38 @@ const devLoginMember = async () => {
 
 .login-header h1 {
   font-size: 36px;
-  color: #fff;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .login-header p {
-  color: #a0a0b0;
+  color: var(--color-text-secondary);
   margin-top: 8px;
 }
 
 .login-card {
-  background: #fff;
-  border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .login-card h2 {
   margin: 0 0 8px;
-  color: #1a1a2e;
+  color: var(--color-text-primary);
 }
 
 .login-subtitle {
-  color: #666;
+  color: var(--color-text-secondary);
   margin-bottom: 24px;
 }
 
 .login-btn {
   width: 100%;
+  justify-content: center;
   padding: 14px;
-  background: #4f46e5;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
   font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.login-btn:hover:not(:disabled) {
-  background: #4338ca;
-}
-
-.login-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
 }
 
 .error-message {
-  color: #dc2626;
+  color: #ef4444;
   margin-top: 16px;
   text-align: center;
   font-size: 14px;
@@ -180,30 +164,21 @@ const devLoginMember = async () => {
 .dev-section {
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid var(--border-color);
 }
 
 .dev-label {
-  color: #888;
+  color: var(--color-text-secondary);
   font-size: 12px;
   text-align: center;
   margin-bottom: 12px;
 }
 
 .dev-btn {
-  display: block;
+  display: flex;
   width: 100%;
-  padding: 10px;
+  justify-content: center;
   margin-bottom: 8px;
-  background: #f3f4f6;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  color: #666;
-  cursor: pointer;
   font-size: 14px;
-}
-
-.dev-btn:hover {
-  background: #e5e5e5;
 }
 </style>

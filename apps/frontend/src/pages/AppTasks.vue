@@ -1,8 +1,10 @@
 <template>
   <div class="tasks-page">
-    <h1>Minhas Tarefas</h1>
+    <div class="page-header">
+      <h1>Minhas Tarefas</h1>
+    </div>
     <div class="tasks-list">
-      <div v-for="task in tasks" :key="task.id" class="task-item" @click="selectTask(task)">
+      <div v-for="task in tasks" :key="task.id" class="task-item glass-panel" @click="selectTask(task)">
         <div class="task-header">
           <span :class="['task-type', 'type-' + task.type]">{{ typeLabels[task.type] }}</span>
           <span :class="['status', 'status-' + task.status]">{{ statusLabels[task.status] }}</span>
@@ -47,7 +49,7 @@ const selectTask = (task: Task) => {
 const fetchTasks = async () => {
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/tasks', { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/tasks', { headers: { Authorization: `Bearer ${token}` } });
     if (res.ok) tasks.value = await res.json();
   } catch { tasks.value = []; }
 };
@@ -56,48 +58,48 @@ onMounted(fetchTasks);
 </script>
 
 <style scoped>
-.tasks-page h1 { color: #1a1a2e; margin-bottom: 24px; }
-
 .tasks-list { display: flex; flex-direction: column; gap: 12px; }
 
 .task-item {
-  background: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
   padding: 16px;
   cursor: pointer;
-  transition: box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
-.task-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.task-item:hover { 
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 112, 243, 0.15);
+}
 
 .task-header { display: flex; gap: 8px; margin-bottom: 8px; }
 
 .task-type, .status, .priority {
   font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
 }
 
-.type-story { background: #dbeafe; color: #1e40af; }
-.type-bug { background: #fee2e2; color: #991b1b; }
-.type-task { background: #d1fae5; color: #065f46; }
-.type-epic { background: #fef3c7; color: #92400e; }
+.type-story { background: rgba(67, 56, 202, 0.2); color: #818cf8; }
+.type-bug { background: rgba(185, 28, 28, 0.2); color: #f87171; }
+.type-task { background: rgba(21, 128, 61, 0.2); color: #4ade80; }
+.type-epic { background: rgba(180, 83, 9, 0.2); color: #fbbf24; }
 
-.status-todo { background: #f3f4f6; color: #666; }
-.status-in_progress { background: #fef3c7; color: #92400e; }
-.status-done { background: #d1fae5; color: #065f46; }
+.status-todo { background: rgba(255, 255, 255, 0.1); color: #cbd5e1; }
+.status-in_progress { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+.status-done { background: rgba(16, 185, 129, 0.1); color: #34d399; }
 
-.task-item h3 { margin: 0 0 4px; font-size: 16px; color: #1a1a2e; }
-.task-item p { margin: 0 0 8px; font-size: 13px; color: #666; }
+.task-item h3 { margin: 0 0 4px; font-size: 16px; color: var(--color-text-primary); }
+.task-item p { margin: 0 0 8px; font-size: 13px; color: var(--color-text-secondary); }
 
 .task-meta { display: flex; justify-content: space-between; font-size: 12px; }
 
-.project { color: #888; }
+.project { color: var(--color-text-secondary); }
 
-.priority-low { background: #e5e5e5; color: #666; }
-.priority-medium { background: #fef3c7; color: #92400e; }
-.priority-high { background: #fee2e2; color: #991b1b; }
+.priority-low { background: rgba(255, 255, 255, 0.05); color: #94a3b8; }
+.priority-medium { background: rgba(234, 179, 8, 0.1); color: #fde047; }
+.priority-high { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
 
-.empty-state { text-align: center; padding: 48px; color: #666; }
+.empty-state { text-align: center; padding: 48px; color: var(--color-text-secondary); }
 </style>

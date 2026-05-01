@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Company, Prisma } from '@prisma/client';
 
@@ -17,8 +17,39 @@ export class CompaniesService {
     });
   }
 
-  async create(data: Prisma.CompanyCreateInput): Promise<Company> {
-    return this.prisma.company.create({ data });
+  async create(
+    data: Prisma.CompanyCreateInput & {
+      ownerEmail?: string;
+      ownerName?: string;
+    },
+  ): Promise<Company> {
+    const { ownerEmail, ownerName, ...companyData } = data;
+
+    try {
+      // Transação para criar a Empresa e o Titular simultaneamente
+      return await this.prisma.$transaction(async (tx) => {
+        const company = await tx.company.create({ data: companyData });
+
+        if (ownerEmail && ownerName) {
+          await tx.user.create({
+            data: {
+              email: ownerEmail,
+              name: ownerName,
+              role: 'admin',
+              companyId: company.id,
+            },
+          });
+        }
+
+        return company;
+      });
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        const fields = error.meta?.target ? (Array.isArray(error.meta.target) ? error.meta.target.join(', ') : error.meta.target) : 'desconhecido';
+        throw new BadRequestException(`Registro duplicado! Já existe um registro com este(s) dado(s): ${fields}. Por favor, use outro CNPJ ou E-mail.`);
+      }
+      throw error;
+    }
   }
 
   async update(

@@ -1,8 +1,10 @@
 <template>
   <div class="projects-page">
-    <h1>Meus Projetos</h1>
+    <div class="page-header">
+      <h1>Meus Projetos</h1>
+    </div>
     <div class="projects-grid">
-      <div v-for="project in projects" :key="project.id" class="project-card" @click="goToProject(project.id)">
+      <div v-for="project in projects" :key="project.id" class="project-card glass-panel" @click="goToProject(project.id)">
         <h3>{{ project.name }}</h3>
         <p>{{ project.description || 'Sem descrição' }}</p>
         <div class="project-meta">
@@ -47,7 +49,7 @@ const statusLabels: Record<string, string> = {
 const fetchProjects = async () => {
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/projects', {
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/projects', {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) projects.value = await res.json();
@@ -64,75 +66,70 @@ onMounted(fetchProjects);
 </script>
 
 <style scoped>
-.projects-page h1 {
-  color: #1a1a2e;
-  margin-bottom: 24px;
-}
-
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  gap: 20px;
 }
 
 .project-card {
-  background: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 12px;
-  padding: 20px;
+  padding: 24px;
   cursor: pointer;
-  transition: box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .project-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-sm);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .project-card h3 {
-  margin: 0 0 8px;
-  color: #1a1a2e;
+  margin: 0 0 12px;
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .project-card p {
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 14px;
-  margin: 0 0 12px;
+  margin: 0 0 16px;
+  line-height: 1.5;
 }
 
 .project-meta {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .status {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.status-active { background: #d1fae5; color: #065f46; }
-.status-inactive { background: #fee2e2; color: #991b1b; }
-.status-archived { background: #e5e5e5; color: #666; }
+.status-active { background: rgba(16, 185, 129, 0.1); color: #34d399; }
+.status-inactive { background: rgba(239, 68, 68, 0.1); color: #f87171; }
+.status-archived { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }
 
 .team {
-  font-size: 12px;
-  color: #888;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .project-stats {
   display: flex;
-  gap: 16px;
-  font-size: 12px;
-  color: #4f46e5;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--neon-blue);
   font-weight: 500;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 48px;
-  color: #666;
-  grid-column: 1 / -1;
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
 }
 </style>

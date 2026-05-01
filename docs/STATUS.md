@@ -11,7 +11,7 @@ App `apps/sprinthub-admin` base criada com validação e bloqueio JWT para o pap
 ### 3. As Engrenagens do Produto Final (O "Miolo" do SaaS) ✅
 Diferente da projeção inicial, a fundação do produto **(Histórias 001 a 010) JÁ ESTÁ IMPLEMENTADA** e livre de erros de compilação bloqueantes.
 - **`apps/backend`**: APIs e Controllers para Autenticação, Empresas, Projetos, Sprints, Tarefas e Times foram criados.
-- **`apps/frontend`**: As interfaces Visuais como `AppBoard.vue`, `DashboardSprints.vue`, entre outras, foram esboçadas no código MVP do cliente.
+- **`apps/frontend`**: Interfaces Visuais como `DashboardSprints.vue` criadas. Kanban principal (`AppBoard.vue`) evoluiu de MVP para Drag & Drop premium e nativo com Side-Panel.
 - Banco de dados ORM configurado com **Prisma** contemplando isolamento por tenant (Company).
 
 ### 4. Pacotes Auxiliares 📦

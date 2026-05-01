@@ -2,10 +2,10 @@
   <div class="projects-page">
     <div class="page-header">
       <h1>Projetos</h1>
-      <button class="btn-primary" @click="openModal()">+ Novo Projeto</button>
+      <button class="btn btn-primary" @click="openModal()">+ Novo Projeto</button>
     </div>
-    <div class="table-container">
-      <table>
+    <div class="table-container glass-panel">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Nome</th>
@@ -28,6 +28,7 @@
             </td>
             <td>{{ formatDate(project.startDate) }}</td>
             <td>
+              <button class="btn-icon" style="color: var(--neon-blue)" @click="$router.push(`/app/project/${project.id}`)">Board</button>
               <button class="btn-icon" @click="openModal(project)">Editar</button>
               <button class="btn-icon danger" @click="deleteProject(project.id)">Excluir</button>
             </td>
@@ -37,57 +38,39 @@
       <p v-if="projects.length === 0" class="empty-state">Nenhum projeto encontrado.</p>
     </div>
 
-    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-      <div class="modal">
-        <h2>{{ editingProject ? 'Editar Projeto' : 'Novo Projeto' }}</h2>
-        <form @submit.prevent="saveProject">
-          <div class="form-group">
-            <label>Nome</label>
-            <input v-model="form.name" type="text" required />
-          </div>
-          <div class="form-group">
-            <label>Descrição</label>
-            <textarea v-model="form.description" rows="3"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Equipe</label>
-            <select v-model="form.teamId">
-              <option value="">Selecione...</option>
-              <option v-for="team in teams" :key="team.id" :value="team.id">
-                {{ team.name }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Status</label>
-            <select v-model="form.status">
-              <option value="active">Ativo</option>
-              <option value="inactive">Inativo</option>
-              <option value="archived">Arquivado</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Data Início</label>
-              <input v-model="form.startDate" type="date" />
-            </div>
-            <div class="form-group">
-              <label>Data Fim</label>
-              <input v-model="form.endDate" type="date" />
-            </div>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" @click="showModal = false">Cancelar</button>
-            <button type="submit" class="btn-primary">Salvar</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- Drawer Novo Projeto -->
+    <GlassDrawer :isOpen="showModal" @close="closeModal" title="Criar Novo Projeto">
+      <form @submit.prevent="createProject" class="drawer-form">
+        <div class="form-group">
+          <label>Nome do Projeto</label>
+          <input v-model="form.name" type="text" required placeholder="Ex: App Mobile" class="dark-input" />
+        </div>
+        
+        <div class="form-group">
+          <label>Equipe Responsável</label>
+          <select v-model="form.teamId" class="dark-input select-dark" required>
+            <option value="" disabled selected>Selecione uma equipe</option>
+            <option v-for="team in teams" :key="team.id" :value="team.id">
+              {{ team.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="drawer-actions mt-4">
+          <button type="button" class="btn btn-outline" @click="closeModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" :disabled="loading">
+            {{ loading ? 'Criando...' : 'Salvar Projeto' }}
+          </button>
+        </div>
+      </form>
+    </GlassDrawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { parseJwt } from '../utils/jwt';
+import GlassDrawer from '../components/GlassDrawer.vue';
 
 interface Project {
   id: string;
@@ -108,6 +91,7 @@ interface Team {
 const projects = ref<Project[]>([]);
 const teams = ref<Team[]>([]);
 const showModal = ref(false);
+const loading = ref(false);
 const editingProject = ref<Project | null>(null);
 const form = ref({
   name: '',
@@ -124,6 +108,13 @@ const statusLabels: Record<string, string> = {
   archived: 'Arquivado',
 };
 
+const getCompanyId = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return '';
+  const payload = parseJwt(token);
+  return payload?.companyId || '';
+};
+
 const getTeamName = (teamId?: string) => {
   if (!teamId) return '-';
   const team = teams.value.find(t => t.id === teamId);
@@ -137,9 +128,11 @@ const formatDate = (date?: string) => {
 
 const fetchData = async () => {
   try {
+    const companyId = getCompanyId();
+    const baseUrl = import.meta.env.VITE_API_URL || '';
     const [projectsRes, teamsRes] = await Promise.all([
-      fetch('/api/projects?companyId=1'),
-      fetch('/api/teams?companyId=1'),
+      fetch(`${baseUrl}/api/projects?companyId=${companyId}`),
+      fetch(`${baseUrl}/api/teams?companyId=${companyId}`),
     ]);
     if (projectsRes.ok) projects.value = await projectsRes.json();
     if (teamsRes.ok) teams.value = await teamsRes.json();
@@ -167,14 +160,21 @@ const openModal = (project?: Project) => {
   showModal.value = true;
 };
 
-const saveProject = async () => {
+const closeModal = () => {
+  showModal.value = false;
+};
+
+const createProject = async () => {
+  loading.value = true;
+  const baseUrl = import.meta.env.VITE_API_URL || '';
   try {
-    const url = editingProject.value ? `/api/projects/${editingProject.value.id}` : '/api/projects';
+    const companyId = getCompanyId();
+    const url = editingProject.value ? `${baseUrl}/api/projects/${editingProject.value.id}` : `${baseUrl}/api/projects`;
     const method = editingProject.value ? 'PATCH' : 'POST';
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form.value, companyId: '1' }),
+      body: JSON.stringify({ ...form.value, companyId }),
     });
     if (res.ok) {
       showModal.value = false;
@@ -182,12 +182,14 @@ const saveProject = async () => {
     }
   } catch (e) {
     console.error(e);
+  } finally {
+    loading.value = false;
   }
 };
 
 const deleteProject = async (id: string) => {
   if (confirm('Tem certeza que deseja excluir?')) {
-    await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+    await fetch((import.meta.env.VITE_API_URL || '') + `/api/projects/${id}`, { method: 'DELETE' });
     fetchData();
   }
 };
@@ -196,106 +198,30 @@ onMounted(fetchData);
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.page-header h1 { color: #1a1a2e; }
-
-.btn-primary {
-  background: #4f46e5;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.btn-secondary {
-  background: #e5e5e5;
-  color: #333;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.table-container {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #e5e5e5;
-}
-
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 16px; text-align: left; border-bottom: 1px solid #e5e5e5; }
-th { background: #f8f9fa; font-weight: 600; }
-
 .status {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-}
-.status-active { background: #d1fae5; color: #065f46; }
-.status-inactive { background: #fee2e2; color: #991b1b; }
-.status-archived { background: #e5e5e5; color: #666; }
-
-.btn-icon {
-  background: none;
-  border: none;
-  color: #4f46e5;
-  cursor: pointer;
-  margin-right: 8px;
-}
-.btn-icon.danger { color: #dc2626; }
-
-.empty-state {
-  text-align: center;
-  padding: 24px;
-  color: #666;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal {
-  background: #fff;
-  padding: 24px;
-  border-radius: 12px;
-  width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal h2 { margin-bottom: 16px; }
-
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; margin-bottom: 4px; font-weight: 500; }
-.form-group input, .form-group textarea, .form-group select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #e5e5e5;
+  padding: 4px 10px;
   border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
+.status-active { background: rgba(16, 185, 129, 0.1); color: #34d399; }
+.status-inactive { background: rgba(239, 68, 68, 0.1); color: #f87171; }
+.status-archived { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }
+.mt-6 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 1rem; }
 
-.form-row {
+.drawer-form {
   display: flex;
+  flex-direction: column;
   gap: 16px;
 }
-.form-row .form-group { flex: 1; }
 
-.modal-actions {
+.drawer-actions {
   display: flex;
-  gap: 8px;
   justify-content: flex-end;
-  margin-top: 16px;
+  gap: 12px;
+  margin-top: 24px;
 }
 </style>

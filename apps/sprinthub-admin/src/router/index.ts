@@ -18,6 +18,11 @@ const routes = [
         path: '',
         name: 'DashboardOverview',
         component: DashboardOverview
+      },
+      {
+        path: 'tenants',
+        name: 'DashboardTenants',
+        component: () => import('../pages/DashboardTenants.vue')
       }
     ]
   }

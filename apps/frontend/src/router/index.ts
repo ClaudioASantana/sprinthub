@@ -43,11 +43,7 @@ const router = createRouter({
           name: 'Overview',
           component: () => import('../pages/DashboardOverview.vue'),
         },
-        {
-          path: 'companies',
-          name: 'Companies',
-          component: () => import('../pages/DashboardCompanies.vue'),
-        },
+
         {
           path: 'projects',
           name: 'Projects',
@@ -64,14 +60,19 @@ const router = createRouter({
           component: () => import('../pages/DashboardTeams.vue'),
         },
         {
+          path: 'users',
+          name: 'Users',
+          component: () => import('../pages/DashboardUsers.vue'),
+        },
+        {
           path: 'sprints',
           name: 'Sprints',
           component: () => import('../pages/DashboardSprints.vue'),
         },
-{
-      path: 'tasks',
-          name: 'Tasks',
-          component: () => import('../pages/DashboardTasks.vue'),
+        {
+          path: 'backlog',
+          name: 'Backlog',
+          component: () => import('../pages/DashboardBacklog.vue'),
         },
       ],
     },

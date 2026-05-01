@@ -3,6 +3,8 @@ export interface JwtPayload {
   email: string;
   perfil: string;
   name?: string;
+  companyId?: string;
+  companyName?: string;
   iat?: number;
   exp?: number;
 }

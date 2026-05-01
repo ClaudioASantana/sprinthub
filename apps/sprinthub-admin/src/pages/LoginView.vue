@@ -49,6 +49,30 @@ const handleLogin = async () => {
     isConnecting.value = false
   }
 }
+
+const handleDevLogin = async () => {
+  isConnecting.value = true
+  errorMessage.value = ""
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/dev-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'admin@sprinthub.com', role: 'super_admin' }),
+    });
+    
+    if (!res.ok) {
+      throw new Error("Erro no Dev Login (Backend indisponível?)")
+    }
+
+    const data = await res.json();
+    localStorage.setItem('sprinthub_admin_token', data.access_token)
+    router.push('/dashboard')
+  } catch (err: any) {
+    errorMessage.value = err.message
+  } finally {
+    isConnecting.value = false
+  }
+}
 </script>
 
 <template>
@@ -87,6 +111,9 @@ const handleLogin = async () => {
 
       <div class="footer">
         <p>Acesso restrito à equipe raiz.</p>
+        <button type="button" class="btn btn-outline dev-btn" @click="handleDevLogin" style="margin-top: 1rem; width: 100%;">
+          🛠️ Dev Bypass (Entrar Direto)
+        </button>
       </div>
     </div>
   </div>

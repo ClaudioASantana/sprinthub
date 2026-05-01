@@ -10,12 +10,14 @@ import {
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../prisma.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Get('login')
@@ -25,14 +27,30 @@ export class AuthController {
   }
 
   @Post('dev-login')
-  devLogin(@Body() body: { email: string; role: string }) {
+  async devLogin(@Body() body: { email: string; role: string }) {
+    // Busca a primeira empresa cadastrada no sistema ou cria um mock se nao houver
+    let company = await this.prisma.company.findFirst();
+
+    if (!company) {
+      company = await this.prisma.company.create({
+        data: {
+          id: 'company-demo-id',
+          name: 'Empresa Genérica',
+          cnpj: '00000000000000',
+          responsible: 'Sistema',
+          email: 'admin@sistema.com',
+        },
+      });
+    }
+
     const payload = {
       sub: 'dev-user-1',
       email: body.email,
       name: body.email.split('@')[0],
       role: body.role || 'member',
       profile: body.role === 'super_admin' ? 'super_admin' : 'user',
-      companyId: 'company-demo-id',
+      companyId: company.id,
+      companyName: company.name,
     };
 
     const token = this.jwtService.sign(payload);
