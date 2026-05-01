@@ -406,8 +406,9 @@ const saveTask = async () => {
   const payload = { ...activeTaskData.value, projectId: projectId.value };
 
   try {
-    let method = isCreating.value ? 'POST' : 'PATCH';
-    let url = isCreating.value ? `/api/tasks` : `/api/tasks/${selectedTask.value?.id}`;
+    const method = isCreating.value ? 'POST' : 'PATCH';
+    const path = isCreating.value ? `/api/tasks` : `/api/tasks/${selectedTask.value?.id}`;
+    const url = (import.meta.env.VITE_API_URL || '') + path;
 
     const res = await fetch(url, {
       method,
