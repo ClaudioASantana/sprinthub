@@ -1,7 +1,4 @@
-[providers]
-  # Força a compilação utilizando o provider node
-  node = {}
-
+providers = ["node"]
 [variables]
   # Node environment parameter override
   NODE_ENV = 'production'
