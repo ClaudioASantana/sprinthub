@@ -27,26 +27,29 @@ export class TasksService {
     return this.prisma.task.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { sprint: true, assignee: true },
+      include: { sprint: true, assignee: true, _count: { select: { comments: true } } },
     });
   }
 
   async findOne(id: string): Promise<Task | null> {
     return this.prisma.task.findUnique({
       where: { id },
-      include: { sprint: true, assignee: true },
+      include: { sprint: true, assignee: true, comments: { include: { author: true }, orderBy: { createdAt: 'asc' } } },
     });
   }
 
   async findByProject(projectId: string): Promise<Task[]> {
     return this.prisma.task.findMany({
       where: { projectId },
-      include: { sprint: true, assignee: true },
+      include: { sprint: true, assignee: true, _count: { select: { comments: true } } },
     });
   }
 
   async findBySprint(sprintId: string): Promise<Task[]> {
-    return this.prisma.task.findMany({ where: { sprintId } });
+    return this.prisma.task.findMany({ 
+      where: { sprintId },
+      include: { sprint: true, assignee: true, _count: { select: { comments: true } } },
+    });
   }
 
   async create(data: Partial<Task>): Promise<Task> {
@@ -88,5 +91,34 @@ export class TasksService {
 
   async delete(id: string): Promise<void> {
     await this.prisma.task.delete({ where: { id } });
+  }
+
+  async addComment(taskId: string, content: string, authorId: string) {
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) throw new BadRequestException('Tarefa fornecida não existe.');
+
+    const user = await this.prisma.user.findUnique({ where: { id: authorId } });
+    if (!user) throw new BadRequestException('Usuário fornecido não existe.');
+
+    return this.prisma.comment.create({
+      data: {
+        content,
+        taskId,
+        authorId,
+      },
+      include: {
+        author: true,
+      },
+    });
+  }
+
+  async getComments(taskId: string) {
+    return this.prisma.comment.findMany({
+      where: { taskId },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        author: true,
+      },
+    });
   }
 }

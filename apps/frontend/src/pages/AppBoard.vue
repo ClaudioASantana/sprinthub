@@ -49,6 +49,10 @@
             <div class="card-badges">
               <span :class="['badge-type', 'type-' + task.type]">{{ typeLabels[task.type] || task.type }}</span>
               <span :class="['badge-priority', 'priority-' + task.priority]">{{ priorityLabels[task.priority] || task.priority }}</span>
+              <span class="badge-comments" v-if="task._count?.comments > 0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                {{ task._count.comments }}
+              </span>
             </div>
             <h4>{{ task.title }}</h4>
             <p v-if="task.description">{{ truncate(task.description, 60) }}</p>
@@ -90,6 +94,10 @@
             <div class="card-badges">
               <span :class="['badge-type', 'type-' + task.type]">{{ typeLabels[task.type] || task.type }}</span>
               <span :class="['badge-priority', 'priority-' + task.priority]">{{ priorityLabels[task.priority] || task.priority }}</span>
+              <span class="badge-comments" v-if="task._count?.comments > 0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                {{ task._count.comments }}
+              </span>
             </div>
             <h4>{{ task.title }}</h4>
             <p v-if="task.description">{{ truncate(task.description, 60) }}</p>
@@ -131,6 +139,10 @@
             <div class="card-badges">
               <span :class="['badge-type', 'type-' + task.type]">{{ typeLabels[task.type] || task.type }}</span>
               <span :class="['badge-priority', 'priority-' + task.priority]">{{ priorityLabels[task.priority] || task.priority }}</span>
+              <span class="badge-comments" v-if="task._count?.comments > 0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                {{ task._count.comments }}
+              </span>
             </div>
             <h4 class="strikethrough">{{ task.title }}</h4>
             <p v-if="task.description">{{ truncate(task.description, 60) }}</p>
@@ -233,6 +245,40 @@
               :disabled="!isCreating && !editMode"
             ></textarea>
           </div>
+
+          <div class="form-group comments-section" v-if="!isCreating">
+            <label>Comentários</label>
+            
+            <div class="comments-list">
+               <div v-if="isLoadingComments" class="comments-loading">Carregando comentários...</div>
+               <div v-else-if="comments.length === 0" class="no-comments">Nenhum comentário ainda.</div>
+               <div v-else v-for="comment in comments" :key="comment.id" class="comment-item">
+                  <div class="comment-header">
+                    <div class="comment-author">
+                      <div class="card-avatar comment-avatar">{{ comment.author?.name.charAt(0).toUpperCase() || '?' }}</div>
+                      <span class="author-name">{{ comment.author?.name || 'Desconhecido' }}</span>
+                    </div>
+                    <span class="comment-time">{{ new Date(comment.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }}</span>
+                  </div>
+                  <div class="comment-content">
+                    {{ comment.content }}
+                  </div>
+               </div>
+            </div>
+
+            <div class="comment-input-area">
+              <textarea 
+                v-model="newCommentContent" 
+                class="form-control" 
+                rows="2" 
+                placeholder="Adicione um comentário..."
+                :disabled="isSubmittingComment"
+              ></textarea>
+              <button class="btn-submit-comment" @click="submitComment" :disabled="!newCommentContent.trim() || isSubmittingComment">
+                {{ isSubmittingComment ? 'Enviando...' : 'Comentar' }}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="panel-footer">
@@ -264,6 +310,7 @@ interface Task {
   sprintId?: string | null;
   assigneeId?: string | null;
   assignee?: { id: string, name: string };
+  _count?: { comments: number };
 }
 
 const route = useRoute();
@@ -281,6 +328,12 @@ const editMode = ref(false);
 const isSaving = ref(false);
 const activeTaskData = ref<Partial<Task>>({});
 
+// Comments states
+const comments = ref<any[]>([]);
+const isLoadingComments = ref(false);
+const newCommentContent = ref('');
+const isSubmittingComment = ref(false);
+
 // Dragging ref
 const draggedTask = ref<Task | null>(null);
 
@@ -297,6 +350,13 @@ const getCompanyId = () => {
   if (!token) return '';
   const payload = parseJwt(token);
   return payload?.companyId || '';
+};
+
+const getUserId = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return '';
+  const payload = parseJwt(token);
+  return payload?.sub || '';
 };
 
 const fetchData = async () => {
@@ -358,11 +418,59 @@ const onDrop = async (_e: DragEvent, targetStatus: string) => {
 };
 
 // --- SIDE PANEL E AÇÕES ---
+const fetchComments = async (taskId: string) => {
+  isLoadingComments.value = true;
+  comments.value = [];
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/tasks/${taskId}/comments`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      comments.value = await res.json();
+    }
+  } catch (err) {
+    console.error('Erro ao buscar comentários', err);
+  } finally {
+    isLoadingComments.value = false;
+  }
+};
+
+const submitComment = async () => {
+  if (!newCommentContent.value.trim() || !selectedTask.value) return;
+  
+  isSubmittingComment.value = true;
+  try {
+    const token = localStorage.getItem('token');
+    const userId = getUserId();
+    
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/tasks/${selectedTask.value.id}/comments`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify({ content: newCommentContent.value, authorId: userId }),
+    });
+    
+    if (res.ok) {
+      newCommentContent.value = '';
+      await fetchComments(selectedTask.value.id);
+      fetchData(); // Atualiza a contagem no board
+    }
+  } catch (err) {
+    console.error('Erro ao adicionar comentário', err);
+  } finally {
+    isSubmittingComment.value = false;
+  }
+};
+
 const selectTask = (task: Task) => { 
   activeTaskData.value = { ...task };
   selectedTask.value = task; 
   isCreating.value = false;
   editMode.value = false;
+  fetchComments(task.id);
 };
 
 const openCreatePanel = (initialStatus: string = 'todo') => {
@@ -578,6 +686,18 @@ onMounted(fetchData);
   display: flex;
   gap: 6px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.badge-comments {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 .badge-type, .badge-priority { 
   font-size: 10px; 
@@ -728,6 +848,105 @@ onMounted(fetchData);
   cursor: not-allowed;
 }
 .desc-area { resize: vertical; }
+
+/* COMUNICACAO E COMENTARIOS */
+.comments-section {
+  margin-top: 24px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.comments-loading, .no-comments {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+}
+
+.comment-item {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comment-avatar {
+  width: 20px;
+  height: 20px;
+  font-size: 9px;
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.author-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.comment-time {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.comment-content {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.comment-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-submit-comment {
+  align-self: flex-end;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-submit-comment:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+
+.btn-submit-comment:disabled {
+  background: rgba(16, 185, 129, 0.3);
+  cursor: not-allowed;
+}
 
 .status-selector {
   display: flex;

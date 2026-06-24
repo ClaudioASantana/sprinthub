@@ -53,4 +53,17 @@ export class TasksController {
   delete(@Param('id') id: string) {
     return this.tasksService.delete(id);
   }
+
+  @Post(':id/comments')
+  addComment(
+    @Param('id') taskId: string,
+    @Body() body: { content: string; authorId: string },
+  ) {
+    return this.tasksService.addComment(taskId, body.content, body.authorId);
+  }
+
+  @Get(':id/comments')
+  getComments(@Param('id') taskId: string) {
+    return this.tasksService.getComments(taskId);
+  }
 }
