@@ -1,13 +1,11 @@
 providers = ["node"]
 [variables]
-  # Node environment parameter override
-  NODE_ENV = 'production'
   # Prisma flag to install the right engines
   PRISMA_CLI_QUERY_ENGINE_TYPE = 'binary'
 
 [phases.install]
-  # Usa npm de acordo com o package-lock.json
-  cmd = 'npm ci'
+  # Usa npm install já que o diretório não contém lockfile isolado
+  cmd = 'npm install'
 
 [phases.build]
   # Comandos declarados no backend que farão a build do NestJS e gerarão as tipagens do client prisma

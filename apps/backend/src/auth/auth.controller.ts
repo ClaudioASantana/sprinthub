@@ -103,6 +103,31 @@ export class AuthController {
     };
   }
 
+  @Get('tenant-callback')
+  async tenantCallback(@Query('code') code: string, @Query('error') error: string) {
+    if (error) {
+      throw new UnauthorizedException(error);
+    }
+
+    if (!code) {
+      throw new UnauthorizedException('Authorization code not provided');
+    }
+
+    // Troca o código pelo Token
+    const authData = await this.authService.exchangeCodeForToken(code);
+
+    if (!authData || !authData.access_token) {
+      throw new UnauthorizedException('Falha na autenticação do Tenant');
+    }
+
+    return {
+      message: 'Authentication successful',
+      user: authData.user,
+      access_token: authData.access_token,
+      redirectUrl: '/dashboard',
+    };
+  }
+
   @Get('validate')
   validate(@Query('token') token: string) {
     const isValid = this.authService.validateSuperAdmin(token);

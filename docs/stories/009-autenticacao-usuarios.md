@@ -1,7 +1,7 @@
 ---
 title: "Story 009 - Autenticação de Usuários"
 type: "story"
-status: "todo"
+status: "done"
 priority: "medium"
 storyPoints: 5
 projectId: "project-1"

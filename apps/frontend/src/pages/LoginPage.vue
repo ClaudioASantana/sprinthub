@@ -75,8 +75,9 @@ const devLoginSuperAdmin = async () => {
     localStorage.setItem('token', data.access_token);
     localStorage.setItem('user', JSON.stringify(data.user));
     router.push('/dashboard');
-  } catch (e) {
-    error.value = 'Erro ao fazer login';
+  } catch (e: any) {
+    error.value = 'Erro: ' + (e?.message || String(e));
+    console.error('Login Error:', e);
   }
   loading.value = false;
 };
@@ -89,12 +90,19 @@ const devLoginMember = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'po@demo.com', role: 'member' }),
     });
+    
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
     const data = await res.json();
     localStorage.setItem('token', data.access_token);
     localStorage.setItem('user', JSON.stringify(data.user));
     router.push('/app');
-  } catch (e) {
-    error.value = 'Erro ao fazer login';
+  } catch (e: any) {
+    error.value = 'Erro: ' + (e?.message || String(e));
+    console.error('Login Error:', e);
   }
   loading.value = false;
 };
