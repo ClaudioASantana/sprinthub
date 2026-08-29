@@ -5,11 +5,11 @@ providers = ["node"]
 
 [phases.install]
   # Usa npm install forçando dependências de dev (TypeScript e Nest CLI necessários para o build)
-  cmd = 'npm install --include=dev'
+  cmds = ['npm install --include=dev']
 
 [phases.build]
   # Comandos declarados no backend que farão a build do NestJS e gerarão as tipagens do client prisma
-  cmd = 'npm run build'
+  cmds = ['npm run build']
 
 [start]
   # Script do package.json que agora contém (npx prisma migrate deploy && node dist/main)
