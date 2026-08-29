@@ -4,8 +4,8 @@ providers = ["node"]
   PRISMA_CLI_QUERY_ENGINE_TYPE = 'binary'
 
 [phases.install]
-  # Usa npm install já que o diretório não contém lockfile isolado
-  cmd = 'npm install'
+  # Usa npm install forçando dependências de dev (TypeScript e Nest CLI necessários para o build)
+  cmd = 'npm install --include=dev'
 
 [phases.build]
   # Comandos declarados no backend que farão a build do NestJS e gerarão as tipagens do client prisma
