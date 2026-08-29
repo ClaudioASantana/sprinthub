@@ -9,6 +9,6 @@ async function bootstrap() {
   app.enableCors();
   app.setGlobalPrefix('api');
   app.enableShutdownHooks();
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 bootstrap().catch(console.error);

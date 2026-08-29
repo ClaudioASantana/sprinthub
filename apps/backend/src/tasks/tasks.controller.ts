@@ -7,10 +7,13 @@ import {
   Param,
   Delete,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('tasks')
 export class TasksController {
@@ -55,11 +58,18 @@ export class TasksController {
   }
 
   @Post(':id/comments')
+  @UseGuards(JwtAuthGuard)
   addComment(
     @Param('id') taskId: string,
-    @Body() body: { content: string; authorId: string },
+    @Body() body: { content: string; authorId?: string },
+    @Req() req: { user?: { sub?: string; email?: string; companyId?: string } },
   ) {
-    return this.tasksService.addComment(taskId, body.content, body.authorId);
+    return this.tasksService.addComment(
+      taskId,
+      body.content,
+      body.authorId || req.user?.sub,
+      { email: req.user?.email, companyId: req.user?.companyId },
+    );
   }
 
   @Get(':id/comments')

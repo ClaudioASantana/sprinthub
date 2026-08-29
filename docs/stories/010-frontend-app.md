@@ -1,3 +1,11 @@
+---
+title: "Story 010 - Frontend App (Cliente Final)"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 010 - Frontend App (Cliente Final)
 
 ## Descrição

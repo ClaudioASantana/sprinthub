@@ -1,3 +1,11 @@
+---
+title: "Gerenciar Empresas (Tenants)"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Gerenciar Empresas (Tenants)
 
 ## Descrição

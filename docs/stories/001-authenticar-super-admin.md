@@ -1,3 +1,11 @@
+---
+title: "Autenticar Super Admin"
+type: "story"
+status: "todo"
+priority: "high"
+storyPoints: 5
+projectId: "project-1"
+---
 # Autenticar Super Admin
 
 ## Descrição

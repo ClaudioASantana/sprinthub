@@ -1,0 +1,14 @@
+---
+description: Convenções do backend NestJS + Prisma
+globs: apps/backend/**/*.{ts,prisma}
+alwaysApply: false
+---
+
+# Backend (NestJS)
+
+- Módulos por domínio em `apps/backend/src/` (auth, companies, teams, projects, sprints, tasks, users).
+- Persistência via Prisma (`apps/backend/prisma/schema.prisma`); não inventar entidades fora do schema.
+- Respeitar multi-tenancy: dados isolados por `Company` / contexto do JWT.
+- Auth via guards JWT; endpoints REST sob `/api/...`.
+- DTOs com validação; erros HTTP consistentes com o módulo existente.
+- Ao gerar recurso: module + service + controller alinhados ao padrão dos módulos vizinhos.

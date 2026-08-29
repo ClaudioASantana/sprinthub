@@ -1,3 +1,11 @@
+---
+title: "Story 014 - Kanban Inteligente (Sprints & Responsáveis)"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 014 - Kanban Inteligente (Sprints & Responsáveis)
 
 ## Descrição

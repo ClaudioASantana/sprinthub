@@ -1,3 +1,11 @@
+---
+title: "Story 005 - Gerenciar Projetos"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 005 - Gerenciar Projetos
 
 ## Descrição

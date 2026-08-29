@@ -93,18 +93,41 @@ export class TasksService {
     await this.prisma.task.delete({ where: { id } });
   }
 
-  async addComment(taskId: string, content: string, authorId: string) {
+  async addComment(
+    taskId: string,
+    content: string,
+    authorId?: string,
+    hints?: { email?: string; companyId?: string },
+  ) {
     const task = await this.prisma.task.findUnique({ where: { id: taskId } });
     if (!task) throw new BadRequestException('Tarefa fornecida não existe.');
 
-    const user = await this.prisma.user.findUnique({ where: { id: authorId } });
-    if (!user) throw new BadRequestException('Usuário fornecido não existe.');
+    let user = authorId
+      ? await this.prisma.user.findUnique({ where: { id: authorId } })
+      : null;
+
+    if (!user && hints?.email) {
+      user = await this.prisma.user.findUnique({ where: { email: hints.email } });
+    }
+
+    if (!user && hints?.companyId) {
+      user = await this.prisma.user.findFirst({
+        where: { companyId: hints.companyId, active: true },
+        orderBy: { createdAt: 'asc' },
+      });
+    }
+
+    if (!user) {
+      throw new BadRequestException(
+        'Usuário autor não encontrado. Use um usuário do seed (ex.: po@demo.com) ou cadastre o usuário.',
+      );
+    }
 
     return this.prisma.comment.create({
       data: {
         content,
         taskId,
-        authorId,
+        authorId: user.id,
       },
       include: {
         author: true,

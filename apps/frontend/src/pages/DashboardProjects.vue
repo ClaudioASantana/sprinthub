@@ -18,7 +18,11 @@
         </thead>
         <tbody>
           <tr v-for="project in projects" :key="project.id">
-            <td>{{ project.name }}</td>
+            <td>
+              <button class="link-name" type="button" @click="$router.push(`/app/project/${project.id}/overview`)">
+                {{ project.name }}
+              </button>
+            </td>
             <td>{{ project.description }}</td>
             <td>{{ getTeamName(project.teamId) }}</td>
             <td>
@@ -28,7 +32,7 @@
             </td>
             <td>{{ formatDate(project.startDate) }}</td>
             <td>
-              <button class="btn-icon" style="color: var(--neon-blue)" @click="$router.push(`/app/project/${project.id}`)">Board</button>
+              <button class="btn-icon" style="color: var(--neon-blue)" @click="$router.push(`/app/project/${project.id}/board`)">Board</button>
               <button class="btn-icon" @click="openModal(project)">Editar</button>
               <button class="btn-icon danger" @click="deleteProject(project.id)">Excluir</button>
             </td>
@@ -223,5 +227,20 @@ onMounted(fetchData);
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
+}
+
+.link-name {
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.link-name:hover {
+  color: var(--neon-blue, #5b8def);
+  text-decoration: underline;
 }
 </style>

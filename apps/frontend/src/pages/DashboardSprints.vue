@@ -2,8 +2,12 @@
   <div class="sprints-page">
     <div class="page-header">
       <div>
-        <button class="btn-back" @click="$router.push('/dashboard/projects')">← Voltar</button>
-        <h1>Sprints - {{ projectName }}</h1>
+        <button
+          v-if="!embeddedInHub"
+          class="btn-back"
+          @click="$router.push('/dashboard/projects')"
+        >← Voltar</button>
+        <h1>Sprints<span v-if="!embeddedInHub"> - {{ projectName }}</span></h1>
       </div>
       <button class="btn btn-primary" @click="openModal()">+ Novo Sprint</button>
     </div>
@@ -21,6 +25,10 @@
         </div>
         <div class="sprint-stats">
           <span>{{ sprint.tasks?.length || 0 }} tarefas</span>
+          <span v-if="sprintPoints(sprint) != null">
+            {{ sprintPoints(sprint) }} pts
+            <template v-if="sprint.capacityPoints != null"> / {{ sprint.capacityPoints }} cap</template>
+          </span>
         </div>
         <div class="sprint-actions">
           <button class="btn-icon" @click="openModal(sprint)">Editar</button>
@@ -63,6 +71,17 @@
           </select>
         </div>
 
+        <div class="form-group">
+          <label>Capacidade (story points)</label>
+          <input
+            v-model.number="form.capacityPoints"
+            type="number"
+            min="0"
+            class="dark-input"
+            placeholder="Ex: 40"
+          />
+        </div>
+
         <div class="drawer-actions mt-4">
           <button type="button" class="btn btn-outline" @click="closeModal">Cancelar</button>
           <button type="submit" class="btn btn-primary">Salvar Sprint</button>
@@ -73,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import GlassDrawer from '../components/GlassDrawer.vue';
 
@@ -85,11 +104,15 @@ interface Sprint {
   startDate: string;
   endDate: string;
   status: string;
+  capacityPoints?: number | null;
   tasks?: any[];
 }
 
 const route = useRoute();
-const projectId = computed(() => route.query.projectId as string || '1');
+const embeddedInHub = computed(() => !!route.params.id && route.path.includes('/app/project/'));
+const projectId = computed(
+  () => (route.params.id as string) || (route.query.projectId as string) || '',
+);
 const projectName = ref('Projeto');
 const sprints = ref<Sprint[]>([]);
 const showModal = ref(false);
@@ -100,6 +123,7 @@ const form = ref({
   startDate: '',
   endDate: '',
   status: 'planning',
+  capacityPoints: null as number | null,
 });
 
 const statusLabels: Record<string, string> = {
@@ -114,17 +138,33 @@ const formatDate = (date?: string) => {
   return new Date(date).toLocaleDateString('pt-BR');
 };
 
+const sprintPoints = (sprint: Sprint) => {
+  if (!sprint.tasks?.length) return 0;
+  return sprint.tasks.reduce((sum, t) => sum + (t.storyPoints || 0), 0);
+};
+
 const fetchSprints = async () => {
+  if (!projectId.value) return;
   try {
     const token = localStorage.getItem('token');
     const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/sprints?projectId=${projectId.value}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (res.ok) sprints.value = await res.json();
+
+    const projRes = await fetch((import.meta.env.VITE_API_URL || '') + `/api/projects/${projectId.value}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (projRes.ok) {
+      const proj = await projRes.json();
+      projectName.value = proj.name || 'Projeto';
+    }
   } catch {
     sprints.value = [];
   }
 };
+
+watch(projectId, fetchSprints);
 
 const openModal = (sprint?: Sprint) => {
   if (sprint) {
@@ -135,10 +175,18 @@ const openModal = (sprint?: Sprint) => {
       startDate: sprint.startDate?.split('T')[0] || '',
       endDate: sprint.endDate?.split('T')[0] || '',
       status: sprint.status || 'planning',
+      capacityPoints: sprint.capacityPoints ?? null,
     };
   } else {
     editingSprint.value = null;
-    form.value = { name: '', goal: '', startDate: '', endDate: '', status: 'planning' };
+    form.value = {
+      name: '',
+      goal: '',
+      startDate: '',
+      endDate: '',
+      status: 'planning',
+      capacityPoints: null,
+    };
   }
   showModal.value = true;
 };
@@ -150,15 +198,26 @@ const closeModal = () => {
 const saveSprint = async () => {
   try {
     const token = localStorage.getItem('token');
-    const url = editingSprint.value ? `/api/sprints/${editingSprint.value.id}` : '/api/sprints';
+    const base = import.meta.env.VITE_API_URL || '';
+    const url = editingSprint.value
+      ? `${base}/api/sprints/${editingSprint.value.id}`
+      : `${base}/api/sprints`;
     const method = editingSprint.value ? 'PATCH' : 'POST';
+    const payload = {
+      ...form.value,
+      capacityPoints:
+        form.value.capacityPoints === null || form.value.capacityPoints === ('' as any)
+          ? null
+          : Number(form.value.capacityPoints),
+      projectId: projectId.value,
+    };
     const res = await fetch(url, {
       method,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ ...form.value, projectId: projectId.value }),
+      body: JSON.stringify(payload),
     });
     if (res.ok) {
       showModal.value = false;
@@ -169,6 +228,7 @@ const saveSprint = async () => {
     }
   } catch (e) {
     console.error(e);
+    alert('Erro ao salvar sprint');
   }
 };
 

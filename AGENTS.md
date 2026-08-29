@@ -1,66 +1,37 @@
-# AGENTS.md - Synkra AIOS (Codex CLI)
+# AGENTS.md — SprintHub
 
-Este arquivo define as instrucoes do projeto para o Codex CLI.
+Instruções para agentes de IA neste repositório (Cursor).
 
-<!-- AIOS-MANAGED-START: core -->
-## Core Rules
+## Core
 
-1. Siga a Constitution em `.aios-core/constitution.md`
-2. Priorize `CLI First -> Observability Second -> UI Third`
-3. Trabalhe por stories em `docs/stories/`
-4. Nao invente requisitos fora dos artefatos existentes
-<!-- AIOS-MANAGED-END: core -->
+1. Trabalhe por stories em `docs/stories/`. É **OBRIGATÓRIO** que cada arquivo tenha o cabeçalho YAML (Frontmatter) contendo metadados (title, type, status, priority, etc).
+2. Não invente requisitos fora dos artefatos em `docs/`
+3. Respeite multi-tenancy (isolamento por Company)
+4. Regras detalhadas: `.cursor/rules/` — skills: `.cursor/skills/`
 
-<!-- AIOS-MANAGED-START: quality -->
-## Quality Gates
+## Quality gates
 
-- Rode `npm run lint`
-- Rode `npm run typecheck`
-- Rode `npm test`
-- Atualize checklist e file list da story antes de concluir
-<!-- AIOS-MANAGED-END: quality -->
+- `pnpm run lint`
+- testes do(s) pacote(s) afetado(s)
+- Atualize checklist da story antes de concluir
 
-<!-- AIOS-MANAGED-START: codebase -->
-## Project Map
+## Project map
 
-- Core framework: `.aios-core/`
-- CLI entrypoints: `bin/`
-- Shared packages: `packages/`
-- Tests: `tests/`
-- Docs: `docs/`
-<!-- AIOS-MANAGED-END: codebase -->
+- `apps/backend` — NestJS + Prisma
+- `apps/frontend` — Vue 3 (tenant)
+- `apps/sprinthub-admin` — Vue 3 (super-admin)
+- `docs/` — arquitetura, status e stories
 
-<!-- AIOS-MANAGED-START: commands -->
-## Common Commands
+## Commands
 
-- `npm run sync:ide`
-- `npm run sync:ide:check`
-- `npm run sync:skills:codex`
-- `npm run sync:skills:codex:global` (opcional; neste repo o padrao e local-first)
-- `npm run validate:structure`
-- `npm run validate:agents`
-<!-- AIOS-MANAGED-END: commands -->
+```bash
+pnpm install
+docker compose up -d
+pnpm run dev
+```
 
-<!-- AIOS-MANAGED-START: shortcuts -->
-## Agent Shortcuts
+## Skills úteis
 
-Preferencia de ativacao no Codex CLI:
-1. Use `/skills` e selecione `aios-<agent-id>` vindo de `.codex/skills` (ex.: `aios-architect`)
-2. Se preferir, use os atalhos abaixo (`@architect`, `/architect`, etc.)
-
-Interprete os atalhos abaixo carregando o arquivo correspondente em `.aios-core/development/agents/` (fallback: `.codex/agents/`), renderize o greeting via `generate-greeting.js` e assuma a persona ate `*exit`:
-
-- `@architect`, `/architect`, `/architect.md` -> `.aios-core/development/agents/architect.md`
-- `@dev`, `/dev`, `/dev.md` -> `.aios-core/development/agents/dev.md`
-- `@qa`, `/qa`, `/qa.md` -> `.aios-core/development/agents/qa.md`
-- `@pm`, `/pm`, `/pm.md` -> `.aios-core/development/agents/pm.md`
-- `@po`, `/po`, `/po.md` -> `.aios-core/development/agents/po.md`
-- `@sm`, `/sm`, `/sm.md` -> `.aios-core/development/agents/sm.md`
-- `@analyst`, `/analyst`, `/analyst.md` -> `.aios-core/development/agents/analyst.md`
-- `@devops`, `/devops`, `/devops.md` -> `.aios-core/development/agents/devops.md`
-- `@data-engineer`, `/data-engineer`, `/data-engineer.md` -> `.aios-core/development/agents/data-engineer.md`
-- `@ux-design-expert`, `/ux-design-expert`, `/ux-design-expert.md` -> `.aios-core/development/agents/ux-design-expert.md`
-- `@squad-creator`, `/squad-creator`, `/squad-creator.md` -> `.aios-core/development/agents/squad-creator.md`
-- `@aios-master`, `/aios-master`, `/aios-master.md` -> `.aios-core/development/agents/aios-master.md`
-- `@sprinthub`, `/sprinthub`, `/sprinthub.md` -> `.codex/skills/aios-sprinthub.md`
-<!-- AIOS-MANAGED-END: shortcuts -->
+- `sprinthub` — backlog / stories / aceite
+- `nestjs` — backend
+- `vue` — frontend

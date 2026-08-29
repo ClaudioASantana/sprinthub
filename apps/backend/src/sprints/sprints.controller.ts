@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { SprintsService } from './sprints.service';
 import { CreateSprintDto } from './dto/create-sprint.dto';
@@ -16,18 +18,30 @@ export class SprintsController {
   constructor(private readonly sprintsService: SprintsService) {}
 
   @Get()
-  findAll() {
+  findAll(@Query('projectId') projectId?: string) {
+    if (projectId) {
+      return this.sprintsService.findByProject(projectId);
+    }
     return this.sprintsService.findAll();
+  }
+
+  @Get('project/:projectId')
+  findByProject(@Param('projectId') projectId: string) {
+    return this.sprintsService.findByProject(projectId);
+  }
+
+  @Get(':id/burndown')
+  async getBurndown(@Param('id') id: string) {
+    const data = await this.sprintsService.getBurndown(id);
+    if (!data) throw new NotFoundException('Sprint not found');
+    return data;
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.sprintsService.findOne(id);
   }
-  @Get('/project/:projectId')
-  findByProject(@Param('projectId') projectId: string) {
-    return this.sprintsService.findByProject(projectId);
-  }
+
   @Post()
   create(@Body() body: CreateSprintDto) {
     return this.sprintsService.create({

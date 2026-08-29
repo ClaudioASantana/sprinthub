@@ -1,3 +1,11 @@
+---
+title: "Story 013 - Frontend Kanban Premium (Pintura da Casa)"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 013 - Frontend Kanban Premium (Pintura da Casa)
 
 ## Descrição

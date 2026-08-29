@@ -1,3 +1,11 @@
+---
+title: "Story 012 - Automação da Esteira de Deploy do Backend"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 012 - Automação da Esteira de Deploy do Backend
 
 ## Descrição

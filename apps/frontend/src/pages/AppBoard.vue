@@ -1,13 +1,14 @@
 <template>
   <div class="board-page">
-    <div class="page-header">
-      <button class="btn-back" @click="$router.push('/app')">
+    <div class="page-header" :class="{ 'page-header-embedded': embeddedInHub }">
+      <button v-if="!embeddedInHub" class="btn-back" @click="$router.push('/app')">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         Projetos
       </button>
       <div class="header-titles">
         <div class="title-with-filter">
-          <h1>{{ project?.name || 'Carregando Board...' }}</h1>
+          <h1 v-if="!embeddedInHub">{{ project?.name || 'Carregando Board...' }}</h1>
+          <h1 v-else class="board-heading">Board</h1>
           <select v-model="selectedSprintId" @change="fetchData" class="sprint-filter">
             <option value="all">Todas as Tarefas</option>
             <option value="backlog">Product Backlog</option>
@@ -16,7 +17,19 @@
             </option>
           </select>
         </div>
-        <p class="subtitle" v-if="project?.description">{{ truncate(project.description, 80) }}</p>
+        <p class="subtitle" v-if="!embeddedInHub && project?.description">{{ truncate(project.description, 80) }}</p>
+        <div class="capacity-bar" v-if="sprintCapacity">
+          <span>
+            Pontos: <strong>{{ sprintCapacity.done }}</strong> done /
+            <strong>{{ sprintCapacity.committed }}</strong> committed
+            <template v-if="sprintCapacity.capacity != null">
+              / capacidade <strong>{{ sprintCapacity.capacity }}</strong>
+              <span :class="{ over: sprintCapacity.overCapacity }">
+                ({{ sprintCapacity.remaining }} restantes)
+              </span>
+            </template>
+          </span>
+        </div>
       </div>
     </div>
     
@@ -49,10 +62,19 @@
             <div class="card-badges">
               <span :class="['badge-type', 'type-' + task.type]">{{ typeLabels[task.type] || task.type }}</span>
               <span :class="['badge-priority', 'priority-' + task.priority]">{{ priorityLabels[task.priority] || task.priority }}</span>
-              <span class="badge-comments" v-if="task._count?.comments > 0">
+              <span class="badge-comments" v-if="(task._count?.comments || 0) > 0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                {{ task._count.comments }}
+                {{ task._count?.comments ?? 0 }}
               </span>
+              <a
+                v-if="task.githubIssueUrl"
+                class="badge-github"
+                :href="task.githubIssueUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Abrir no GitHub"
+                @click.stop
+              >#{{ task.githubIssueNumber || 'GH' }}</a>
             </div>
             <h4>{{ task.title }}</h4>
             <p v-if="task.description">{{ truncate(task.description, 60) }}</p>
@@ -94,10 +116,19 @@
             <div class="card-badges">
               <span :class="['badge-type', 'type-' + task.type]">{{ typeLabels[task.type] || task.type }}</span>
               <span :class="['badge-priority', 'priority-' + task.priority]">{{ priorityLabels[task.priority] || task.priority }}</span>
-              <span class="badge-comments" v-if="task._count?.comments > 0">
+              <span class="badge-comments" v-if="(task._count?.comments || 0) > 0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                {{ task._count.comments }}
+                {{ task._count?.comments ?? 0 }}
               </span>
+              <a
+                v-if="task.githubIssueUrl"
+                class="badge-github"
+                :href="task.githubIssueUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Abrir no GitHub"
+                @click.stop
+              >#{{ task.githubIssueNumber || 'GH' }}</a>
             </div>
             <h4>{{ task.title }}</h4>
             <p v-if="task.description">{{ truncate(task.description, 60) }}</p>
@@ -139,10 +170,19 @@
             <div class="card-badges">
               <span :class="['badge-type', 'type-' + task.type]">{{ typeLabels[task.type] || task.type }}</span>
               <span :class="['badge-priority', 'priority-' + task.priority]">{{ priorityLabels[task.priority] || task.priority }}</span>
-              <span class="badge-comments" v-if="task._count?.comments > 0">
+              <span class="badge-comments" v-if="(task._count?.comments || 0) > 0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                {{ task._count.comments }}
+                {{ task._count?.comments ?? 0 }}
               </span>
+              <a
+                v-if="task.githubIssueUrl"
+                class="badge-github"
+                :href="task.githubIssueUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Abrir no GitHub"
+                @click.stop
+              >#{{ task.githubIssueNumber || 'GH' }}</a>
             </div>
             <h4 class="strikethrough">{{ task.title }}</h4>
             <p v-if="task.description">{{ truncate(task.description, 60) }}</p>
@@ -310,16 +350,62 @@ interface Task {
   sprintId?: string | null;
   assigneeId?: string | null;
   assignee?: { id: string, name: string };
+  storyPoints?: number | null;
+  githubIssueNumber?: number | null;
+  githubIssueUrl?: string | null;
   _count?: { comments: number };
 }
 
 const route = useRoute();
+const embeddedInHub = computed(() => route.path.includes('/app/project/') && route.path.includes('/board'));
 const projectId = computed(() => route.params.id as string);
 const tasks = ref<Task[]>([]);
 const project = ref<any>(null);
 const sprints = ref<any[]>([]);
 const users = ref<any[]>([]);
 const selectedSprintId = ref<string>('all');
+const sprintFilterInitialized = ref(false);
+
+const selectedSprint = computed(() =>
+  sprints.value.find((s) => s.id === selectedSprintId.value) || null,
+);
+
+const sprintCapacity = computed(() => {
+  const sprint = selectedSprint.value;
+  if (!sprint || selectedSprintId.value === 'all' || selectedSprintId.value === 'backlog') {
+    return null;
+  }
+  const committed = tasks.value.reduce((sum, t) => sum + (t.storyPoints || 0), 0);
+  const done = tasks.value
+    .filter((t) => t.status === 'done')
+    .reduce((sum, t) => sum + (t.storyPoints || 0), 0);
+  const capacity = sprint.capacityPoints ?? null;
+  return {
+    committed,
+    done,
+    capacity,
+    remaining: capacity != null ? capacity - committed : null,
+    overCapacity: capacity != null && committed > capacity,
+  };
+});
+
+function resolveDefaultSprintId(list: any[]): string {
+  const fromQuery = route.query.sprint as string | undefined;
+  if (fromQuery && (fromQuery === 'backlog' || fromQuery === 'all' || list.some((s) => s.id === fromQuery))) {
+    return fromQuery;
+  }
+  if (list.length === 0) return 'backlog';
+  const active = list.find((s) => s.status === 'active');
+  if (active) return active.id;
+  const now = Date.now();
+  const inWindow = list.find((s) => {
+    const start = new Date(s.startDate).getTime();
+    const end = new Date(s.endDate).getTime();
+    return start <= now && now <= end;
+  });
+  if (inWindow) return inWindow.id;
+  return 'backlog';
+}
 
 // Panel states
 const selectedTask = ref<Task | null>(null);
@@ -374,8 +460,33 @@ const fetchData = async () => {
       fetch((import.meta.env.VITE_API_URL || '') + `/api/users?companyId=${companyId}`, { headers: { Authorization: `Bearer ${token}` } }),
     ]);
     if (projRes.ok) project.value = await projRes.json();
-    if (tasksRes.ok) tasks.value = await tasksRes.json();
-    if (sprintsRes.ok) sprints.value = await sprintsRes.json();
+    if (sprintsRes.ok) {
+      sprints.value = await sprintsRes.json();
+      if (!sprintFilterInitialized.value) {
+        selectedSprintId.value = resolveDefaultSprintId(sprints.value);
+        sprintFilterInitialized.value = true;
+        // Re-fetch tasks with the resolved sprint filter
+        if (selectedSprintId.value !== 'all') {
+          let retryUrl = `/api/tasks?projectId=${projectId.value}&companyId=${companyId}`;
+          if (selectedSprintId.value === 'backlog') retryUrl += '&sprintId=null';
+          else retryUrl += `&sprintId=${selectedSprintId.value}`;
+          const retry = await fetch((import.meta.env.VITE_API_URL || '') + retryUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (retry.ok) {
+            tasks.value = await retry.json();
+          } else if (tasksRes.ok) {
+            tasks.value = await tasksRes.json();
+          }
+        } else if (tasksRes.ok) {
+          tasks.value = await tasksRes.json();
+        }
+      } else if (tasksRes.ok) {
+        tasks.value = await tasksRes.json();
+      }
+    } else if (tasksRes.ok) {
+      tasks.value = await tasksRes.json();
+    }
     if (usersRes.ok) users.value = await usersRes.json();
   } catch (err) {
     console.error(err);
@@ -555,6 +666,33 @@ onMounted(fetchData);
   box-sizing: border-box;
 }
 
+.page-header-embedded + .kanban-board,
+.board-page:has(.page-header-embedded) {
+  height: auto;
+  min-height: 60vh;
+  padding: 0;
+}
+
+.page-header-embedded {
+  margin-bottom: 16px;
+}
+
+.board-heading {
+  font-size: 1.1rem !important;
+  margin: 0 !important;
+}
+
+.capacity-bar {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.capacity-bar .over {
+  color: #f87171;
+  font-weight: 600;
+}
+
 .page-header { 
   margin-bottom: 24px;
 }
@@ -698,6 +836,19 @@ onMounted(fetchData);
   display: flex;
   align-items: center;
   gap: 4px;
+}
+.badge-github {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  text-decoration: none;
+}
+.badge-github:hover {
+  background: rgba(59, 130, 246, 0.3);
+  color: #bfdbfe;
 }
 .badge-type, .badge-priority { 
   font-size: 10px; 

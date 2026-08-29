@@ -1,3 +1,11 @@
+---
+title: "Story 004 - Gerenciar Equipes"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 004 - Gerenciar Equipes
 
 ## Descrição

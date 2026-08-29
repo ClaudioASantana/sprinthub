@@ -1,3 +1,11 @@
+---
+title: "Story 003 - Preparação do Layout Interno (Dashboard Shell)"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 003 - Preparação do Layout Interno (Dashboard Shell)
 
 O objetivo desta etapa é transformar o `DashboardLayout.vue` atual (que possui conteúdo embutido de demonstração) em um verdadeiro **Layout Container/Shell**. Isso permitirá que tenhamos rotas filhas na URL (`/dashboard`, `/dashboard/tenants`, etc.) e cada respectiva tela será renderizada no espaço central de conteúdo sem forçar recarregamentos na página.

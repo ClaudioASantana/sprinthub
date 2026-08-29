@@ -1,0 +1,36 @@
+---
+description: Regras do produto SprintHub — stories, escopo e quality gates
+alwaysApply: true
+---
+
+# SprintHub
+
+SaaS multi-tenant de gestão ágil (Company → Team → Project → Sprint → Task).
+
+## Escopo
+
+- Trabalhe a partir de `docs/stories/` e docs em `docs/`.
+- OBRIGATÓRIO: Ao criar ou editar uma nova história (story) em `docs/stories/`, **sempre** inclua o bloco de metadados YAML (Frontmatter) no topo do arquivo com as chaves: `title`, `type` (ex: story, bug, tech-debt), `status` (ex: todo, in_progress, done), `priority` (low, medium, high), `storyPoints` e `projectId`.
+- Não invente requisitos fora dos artefatos existentes.
+- Atualize critérios de aceite / checklist da story ao concluir trabalho nela.
+- Backlog do produto = Tasks com `sprintId = null` (ver `docs/architecture/AGILE_WORKFLOW_AND_BACKLOG.md`).
+
+## Mapa do monorepo
+
+- `apps/backend` — NestJS + Prisma + PostgreSQL
+- `apps/frontend` — Vue 3 + Vite (app do tenant)
+- `apps/sprinthub-admin` — Vue 3 (super-admin)
+- `packages/` — código compartilhado (se existir)
+- `docs/stories/` — stories do produto
+
+## Quality gates
+
+Antes de considerar uma story pronta:
+
+- `pnpm run lint` (ou lint do pacote afetado)
+- testes do pacote afetado (`pnpm --filter <pkg> test` quando existir)
+- build do pacote afetado se a mudança for sensível a compile
+
+## GitHub / backlog externo
+
+Issues e GitHub Projects de outros repos podem ser lidos via MCP GitHub no Cursor (não via produto SprintHub). Preferir o server oficial `github/github-mcp-server` com PAT (`repo` + `project` se for Projects). Exemplo em `.cursor/mcp.json.example`.

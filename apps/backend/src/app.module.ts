@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaService } from './prisma.service';
 import { PrismaModule } from './prisma.module';
 import { AppController } from './app.controller';
@@ -11,10 +12,13 @@ import { SprintsModule } from './sprints/sprints.module';
 import { TasksModule } from './tasks/tasks.module';
 import { TeamsModule } from './teams/teams.module';
 import { UsersModule } from './users/users.module';
+import { SyncStoriesModule } from './sync-stories/sync-stories.module';
+import { GithubSyncModule } from './github-sync/github-sync.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     CompaniesModule,
@@ -23,6 +27,8 @@ import { UsersModule } from './users/users.module';
     TasksModule,
     TeamsModule,
     UsersModule,
+    SyncStoriesModule,
+    GithubSyncModule,
   ],
   controllers: [AppController],
   providers: [AppService],

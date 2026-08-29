@@ -4,12 +4,20 @@ packages:
 allowBuilds:
   /: true
   '@': true
+  '@nestjs/core': false
+  '@prisma/client': false
+  '@prisma/engines': false
   a: true
   e: true
+  esbuild: true
   g: true
   i: true
   m: true
+  msgpackr-extract: true
   n: true
   p: true
+  prisma: false
   r: true
   s: true
+  unrs-resolver: false
+  workerd: true

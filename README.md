@@ -66,13 +66,9 @@ A stack foi escolhida com foco em performance, tipagem estática rigorosa e alta
 
 ---
 
-## 🤖 Inovação: Desenvolvimento Guiado por IA (AIOS)
+## 🤖 Contexto para agentes de IA
 
-Um dos maiores diferenciais da engenharia de software aplicada a este projeto é o uso integrado do **Synkra AIOS (Codex CLI)**.
-
-O repositório abriga seu próprio "sistema operacional de IA" na pasta `.aios-core/`. Diversos agentes autônomos especialistas (`@architect`, `@dev`, `@qa`, `@po`, etc) colaboram de forma padronizada respeitando regras inegociáveis de negócio e arquitetura (*Constitution*). Esse ecossistema garante:
-- **Padrões de Código Constantes**: Análise e execução automática de *Quality Gates* (Lint, Typecheck, Testes).
-- **Gestão de Requisitos Eficiente**: Agentes atuando exclusivamente sobre *Stories* bem documentadas em artefatos rastreáveis.
+O desenvolvimento é guiado por stories em `docs/stories/`, com regras e skills leves em `.cursor/` (ver `AGENTS.md`). Quality gates: lint e testes dos pacotes afetados.
 
 ---
 
@@ -101,11 +97,20 @@ O repositório abriga seu próprio "sistema operacional de IA" na pasta `.aios-c
    docker-compose up -d
    ```
 
-4. **Inicie o ambiente de desenvolvimento:**
+4. **Configure o backend e aplique o schema + seed demo:**
+   ```bash
+   # Em apps/backend/.env (ajuste se necessário):
+   # DATABASE_URL="postgresql://admin:admin_password@localhost:5434/sprinthub_dev"
+   make db-init
+   ```
+   Isso cria o cenário **SprintHub Core** (`project-sprinthub-core`): 2 sprints, ~17 tasks, 3 users (`po@demo.com`, `dev1@demo.com`, `dev2@demo.com`).  
+   Board: `/app/project/project-sprinthub-core` — re-seed: `make db-seed`.
+
+5. **Inicie o ambiente de desenvolvimento:**
    ```bash
    pnpm run dev
    ```
-   > Este comando executará todos os pacotes em paralelo (API, App Frontend e Super Admin). O ambiente estará pronto para acesso.
+   > Este comando executará todos os pacotes em paralelo (API, App Frontend e Super Admin). Login local: botão/dev-login com e-mail demo (ex.: `po@demo.com`).
 
 ---
 <div align="center">

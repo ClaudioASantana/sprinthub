@@ -1,0 +1,14 @@
+---
+description: Convenções do frontend Vue 3 (app e admin)
+globs: apps/{frontend,sprinthub-admin}/**/*.{vue,ts,js}
+alwaysApply: false
+---
+
+# Frontend (Vue 3)
+
+- Composition API com `<script setup>` e TypeScript quando o arquivo já usa TS.
+- Páginas em `src/pages` (ou estrutura equivalente do app); rotas no Vue Router.
+- Serviços HTTP alinhados aos existentes; usar `VITE_API_URL` (ou proxy do Vite) — não hardcodar host de produção.
+- Estado: seguir o padrão já usado no app (evitar Pinia novo se o módulo vizinho não usa).
+- Kanban / backlog: filtrar por `projectId` e `sprintId` (null = product backlog).
+- UI: preservar glass-panel / layout interno existente; não redesenhar do zero sem pedido.

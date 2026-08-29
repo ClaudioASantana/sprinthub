@@ -1,3 +1,11 @@
+---
+title: "Story 011 - Configuração de Banco em Nuvem e Deploy"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 011 - Configuração de Banco em Nuvem e Deploy
 
 ## Descrição

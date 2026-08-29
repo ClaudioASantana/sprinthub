@@ -1,3 +1,11 @@
+---
+title: "Story 006 - Gerenciar Sprints"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 006 - Gerenciar Sprints
 
 ## Descrição

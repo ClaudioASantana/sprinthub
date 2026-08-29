@@ -1,3 +1,11 @@
+---
+title: "Story 007 - Gerenciar Backlog e Tarefas"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 007 - Gerenciar Backlog e Tarefas
 
 ## Descrição

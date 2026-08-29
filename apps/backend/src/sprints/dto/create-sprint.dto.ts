@@ -4,6 +4,8 @@ import {
   IsOptional,
   IsEnum,
   IsDateString,
+  IsInt,
+  Min,
 } from 'class-validator';
 
 export class CreateSprintDto {
@@ -31,4 +33,9 @@ export class CreateSprintDto {
   @IsOptional()
   @IsEnum(['planning', 'active', 'completed', 'cancelled'])
   status?: string;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  capacityPoints?: number;
 }

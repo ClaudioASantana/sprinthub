@@ -98,8 +98,33 @@ const router = createRouter({
         },
         {
           path: 'project/:id',
-          name: 'AppProjectBoard',
-          component: () => import('../pages/AppBoard.vue'),
+          component: () => import('../pages/AppProjectHub.vue'),
+          children: [
+            {
+              path: '',
+              redirect: { name: 'AppProjectBoard' },
+            },
+            {
+              path: 'overview',
+              name: 'AppProjectOverview',
+              component: () => import('../pages/AppProjectOverview.vue'),
+            },
+            {
+              path: 'backlog',
+              name: 'AppProjectBacklog',
+              component: () => import('../pages/DashboardBacklog.vue'),
+            },
+            {
+              path: 'board',
+              name: 'AppProjectBoard',
+              component: () => import('../pages/AppBoard.vue'),
+            },
+            {
+              path: 'sprints',
+              name: 'AppProjectSprints',
+              component: () => import('../pages/DashboardSprints.vue'),
+            },
+          ],
         },
       ],
     },

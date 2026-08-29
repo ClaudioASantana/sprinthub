@@ -1,3 +1,11 @@
+---
+title: "Story 008 - Modelagem de Dados com Prisma"
+type: "story"
+status: "todo"
+priority: "medium"
+storyPoints: 5
+projectId: "project-1"
+---
 # Story 008 - Modelagem de Dados com Prisma
 
 ## Descrição
