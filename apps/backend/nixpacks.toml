@@ -4,12 +4,12 @@ providers = ["node"]
   PRISMA_CLI_QUERY_ENGINE_TYPE = 'binary'
 
 [phases.install]
-  cmds = ['npm install -g pnpm', 'pnpm install --prod=false']
+  cmds = ['npx pnpm install --prod=false']
 
 [phases.build]
   # Comandos declarados no backend que farão a build do NestJS e gerarão as tipagens do client prisma
-  cmds = ['pnpm run build']
+  cmds = ['npx pnpm run build']
 
 [start]
   # Script do package.json que agora contém (npx prisma migrate deploy && node dist/main)
-  cmd = 'pnpm run start:prod'
+  cmd = 'npx pnpm run start:prod'
