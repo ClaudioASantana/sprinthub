@@ -66,7 +66,7 @@ onMounted(() => {
 const devLoginSuperAdmin = async () => {
   loading.value = true;
   try {
-    const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/auth/dev-login', {
+    const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:3005') + '/api/auth/dev-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'admin@sprinthub.com', role: 'super_admin' }),
@@ -85,7 +85,7 @@ const devLoginSuperAdmin = async () => {
 const devLoginMember = async () => {
   loading.value = true;
   try {
-    const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/auth/dev-login', {
+    const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:3005') + '/api/auth/dev-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'po@demo.com', role: 'member' }),

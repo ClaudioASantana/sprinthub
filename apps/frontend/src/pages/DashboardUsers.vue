@@ -87,7 +87,7 @@ const users = ref<any[]>([])
 const showModal = ref(false)
 const loading = ref(false)
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3005'
 
 const form = ref({
   name: '',

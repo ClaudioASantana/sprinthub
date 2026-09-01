@@ -20,7 +20,7 @@ onMounted(async () => {
   }
 
   try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3005';
     const res = await fetch(`${apiUrl}/api/auth/tenant-callback?code=${code}`);
     
     if (res.ok) {
