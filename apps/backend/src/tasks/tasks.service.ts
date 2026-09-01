@@ -27,29 +27,66 @@ export class TasksService {
     return this.prisma.task.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { sprint: true, assignee: true, _count: { select: { comments: true } } },
+      include: {
+        sprint: true,
+        assignee: true,
+        _count: { select: { comments: true } },
+      },
     });
   }
 
   async findOne(id: string): Promise<Task | null> {
     return this.prisma.task.findUnique({
       where: { id },
-      include: { sprint: true, assignee: true, comments: { include: { author: true }, orderBy: { createdAt: 'asc' } } },
+      include: {
+        sprint: true,
+        assignee: true,
+        comments: { include: { author: true }, orderBy: { createdAt: 'asc' } },
+      },
     });
   }
 
   async findByProject(projectId: string): Promise<Task[]> {
     return this.prisma.task.findMany({
       where: { projectId },
-      include: { sprint: true, assignee: true, _count: { select: { comments: true } } },
+      include: {
+        sprint: true,
+        assignee: true,
+        _count: { select: { comments: true } },
+      },
     });
   }
 
   async findBySprint(sprintId: string): Promise<Task[]> {
-    return this.prisma.task.findMany({ 
+    return this.prisma.task.findMany({
       where: { sprintId },
-      include: { sprint: true, assignee: true, _count: { select: { comments: true } } },
+      include: {
+        sprint: true,
+        assignee: true,
+        _count: { select: { comments: true } },
+      },
     });
+  }
+
+  /**
+   * Valida que a sprint existe e pertence ao mesmo projeto da tarefa. O banco
+   * não tem constraint ligando Task.projectId a Sprint.projectId, então sem
+   * esta checagem a tarefa acaba numa sprint de outro projeto (e de outra
+   * empresa), quebrando o isolamento por tenant.
+   */
+  private async assertSprintBelongsToProject(
+    sprintId: string,
+    projectId: string,
+  ): Promise<void> {
+    const sprint = await this.prisma.sprint.findUnique({
+      where: { id: sprintId },
+    });
+    if (!sprint) throw new BadRequestException('Sprint fornecida não existe.');
+    if (sprint.projectId !== projectId) {
+      throw new BadRequestException(
+        'A sprint fornecida pertence a outro projeto.',
+      );
+    }
   }
 
   async create(data: Partial<Task>): Promise<Task> {
@@ -61,29 +98,32 @@ export class TasksService {
         throw new BadRequestException('Projeto fornecido não existe.');
     }
     if (data.sprintId) {
-      const sprint = await this.prisma.sprint.findUnique({
-        where: { id: data.sprintId },
-      });
-      if (!sprint)
-        throw new BadRequestException('Sprint fornecida não existe.');
+      if (!data.projectId) {
+        throw new BadRequestException(
+          'projectId é obrigatório para associar a tarefa a uma sprint.',
+        );
+      }
+      await this.assertSprintBelongsToProject(data.sprintId, data.projectId);
     }
     return this.prisma.task.create({ data: data as any });
   }
 
   async update(id: string, data: Partial<Task>): Promise<Task | null> {
-    if (data.sprintId) {
-      const sprint = await this.prisma.sprint.findUnique({
-        where: { id: data.sprintId },
-      });
-      if (!sprint)
-        throw new BadRequestException('Sprint fornecida não existe.');
-    }
     if (data.projectId) {
       const project = await this.prisma.project.findUnique({
         where: { id: data.projectId },
       });
       if (!project)
         throw new BadRequestException('Projeto fornecido não existe.');
+    }
+    if (data.sprintId) {
+      // O projeto de destino é o novo (se veio no patch) ou o atual da tarefa.
+      const current = await this.prisma.task.findUnique({ where: { id } });
+      if (!current) throw new BadRequestException('Tarefa não existe.');
+      await this.assertSprintBelongsToProject(
+        data.sprintId,
+        data.projectId ?? current.projectId,
+      );
     }
     await this.prisma.task.update({ where: { id }, data: data as any });
     return this.findOne(id);
@@ -107,7 +147,9 @@ export class TasksService {
       : null;
 
     if (!user && hints?.email) {
-      user = await this.prisma.user.findUnique({ where: { email: hints.email } });
+      user = await this.prisma.user.findUnique({
+        where: { email: hints.email },
+      });
     }
 
     if (!user && hints?.companyId) {
