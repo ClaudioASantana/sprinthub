@@ -45,8 +45,14 @@ export class CompaniesService {
       });
     } catch (error: any) {
       if (error.code === 'P2002') {
-        const fields = error.meta?.target ? (Array.isArray(error.meta.target) ? error.meta.target.join(', ') : error.meta.target) : 'desconhecido';
-        throw new BadRequestException(`Registro duplicado! Já existe um registro com este(s) dado(s): ${fields}. Por favor, use outro CNPJ ou E-mail.`);
+        const fields = error.meta?.target
+          ? Array.isArray(error.meta.target)
+            ? error.meta.target.join(', ')
+            : error.meta.target
+          : 'desconhecido';
+        throw new BadRequestException(
+          `Registro duplicado! Já existe um registro com este(s) dado(s): ${fields}. Por favor, use outro CNPJ ou E-mail.`,
+        );
       }
       throw error;
     }

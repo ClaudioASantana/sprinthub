@@ -48,7 +48,9 @@ export class ProjectsController {
         ...fromCsv,
       ]);
     } catch (e: any) {
-      throw new BadRequestException(e?.message || 'Falha ao listar GitHub Projects');
+      throw new BadRequestException(
+        e?.message || 'Falha ao listar GitHub Projects',
+      );
     }
   }
 

@@ -14,23 +14,29 @@ export class GithubSyncCronService {
 
   @Cron('0 */15 * * * *')
   async handleCron() {
-    this.logger.log('Iniciando sincronização automática de projetos do GitHub...');
+    this.logger.log(
+      'Iniciando sincronização automática de projetos do GitHub...',
+    );
     try {
       const projectsToSync = await this.prisma.project.findMany({
         where: {
           OR: [
             { githubRepo: { not: null } },
-            { githubProjectNumber: { not: null } }
+            { githubProjectNumber: { not: null } },
           ],
         },
         select: { id: true, name: true, githubOwner: true },
       });
 
-      this.logger.log(`Encontrados ${projectsToSync.length} projetos para sincronizar.`);
+      this.logger.log(
+        `Encontrados ${projectsToSync.length} projetos para sincronizar.`,
+      );
 
       for (const project of projectsToSync) {
         try {
-          this.logger.log(`Sincronizando projeto: ${project.name} (${project.id})`);
+          this.logger.log(
+            `Sincronizando projeto: ${project.name} (${project.id})`,
+          );
           await this.projectsService.syncGithubIssues(project.id);
         } catch (error: any) {
           this.logger.error(
@@ -40,7 +46,10 @@ export class GithubSyncCronService {
       }
       this.logger.log('Sincronização automática concluída com sucesso.');
     } catch (error: any) {
-      this.logger.error('Erro na rotina de sincronização automática:', error.message);
+      this.logger.error(
+        'Erro na rotina de sincronização automática:',
+        error.message,
+      );
     }
   }
 }

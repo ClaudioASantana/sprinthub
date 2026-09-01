@@ -104,7 +104,10 @@ export class AuthController {
   }
 
   @Get('tenant-callback')
-  async tenantCallback(@Query('code') code: string, @Query('error') error: string) {
+  async tenantCallback(
+    @Query('code') code: string,
+    @Query('error') error: string,
+  ) {
     if (error) {
       throw new UnauthorizedException(error);
     }

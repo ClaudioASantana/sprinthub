@@ -104,24 +104,29 @@ export class SprintsService {
     const today = startOfDay(new Date());
 
     const days: Date[] = [];
-    for (let d = new Date(start); d.getTime() <= end.getTime(); d.setDate(d.getDate() + 1)) {
+    for (
+      let d = new Date(start);
+      d.getTime() <= end.getTime();
+      d.setDate(d.getDate() + 1)
+    ) {
       days.push(new Date(d));
     }
     if (days.length === 0) days.push(start);
 
-    const committed = sprint.tasks.reduce((sum, t) => sum + (t.storyPoints ?? 0), 0);
+    const committed = sprint.tasks.reduce(
+      (sum, t) => sum + (t.storyPoints ?? 0),
+      0,
+    );
     // Tasks without points count as 1 unit for a usable chart when all null
     const useTaskCount = committed === 0;
-    const totalUnits = useTaskCount
-      ? sprint.tasks.length
-      : committed;
+    const totalUnits = useTaskCount ? sprint.tasks.length : committed;
 
     const points = days.map((day, index) => {
       const ideal =
         totalUnits === 0
           ? 0
           : Math.round(
-              (totalUnits * (1 - index / Math.max(days.length - 1, 1))) * 10,
+              totalUnits * (1 - index / Math.max(days.length - 1, 1)) * 10,
             ) / 10;
 
       const dayEnd = endOfDay(day);
@@ -130,7 +135,7 @@ export class SprintsService {
         if (t.status !== 'done') continue;
         const doneAt = t.updatedAt.getTime();
         if (doneAt <= dayEnd.getTime()) {
-          completedUnits += useTaskCount ? 1 : t.storyPoints ?? 0;
+          completedUnits += useTaskCount ? 1 : (t.storyPoints ?? 0);
         }
       }
 

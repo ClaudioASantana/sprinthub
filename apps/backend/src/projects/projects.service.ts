@@ -73,29 +73,34 @@ export class ProjectsService {
       }) ||
       null;
 
-    const [totalTasks, backlogCount, statusGroups, sprintStatusGroups, sprintPoints] =
-      await Promise.all([
-        this.prisma.task.count({ where: { projectId } }),
-        this.prisma.task.count({ where: { projectId, sprintId: null } }),
-        this.prisma.task.groupBy({
-          by: ['status'],
-          where: { projectId },
-          _count: { _all: true },
-        }),
-        activeSprint
-          ? this.prisma.task.groupBy({
-              by: ['status'],
-              where: { projectId, sprintId: activeSprint.id },
-              _count: { _all: true },
-            })
-          : Promise.resolve([]),
-        activeSprint
-          ? this.prisma.task.findMany({
-              where: { projectId, sprintId: activeSprint.id },
-              select: { status: true, storyPoints: true },
-            })
-          : Promise.resolve([]),
-      ]);
+    const [
+      totalTasks,
+      backlogCount,
+      statusGroups,
+      sprintStatusGroups,
+      sprintPoints,
+    ] = await Promise.all([
+      this.prisma.task.count({ where: { projectId } }),
+      this.prisma.task.count({ where: { projectId, sprintId: null } }),
+      this.prisma.task.groupBy({
+        by: ['status'],
+        where: { projectId },
+        _count: { _all: true },
+      }),
+      activeSprint
+        ? this.prisma.task.groupBy({
+            by: ['status'],
+            where: { projectId, sprintId: activeSprint.id },
+            _count: { _all: true },
+          })
+        : Promise.resolve([]),
+      activeSprint
+        ? this.prisma.task.findMany({
+            where: { projectId, sprintId: activeSprint.id },
+            select: { status: true, storyPoints: true },
+          })
+        : Promise.resolve([]),
+    ]);
 
     const byStatus = { todo: 0, in_progress: 0, done: 0 };
     for (const row of statusGroups) {
@@ -105,15 +110,22 @@ export class ProjectsService {
     }
 
     const sprintByStatus = { todo: 0, in_progress: 0, done: 0 };
-    for (const row of sprintStatusGroups as { status: string; _count: { _all: number } }[]) {
+    for (const row of sprintStatusGroups as {
+      status: string;
+      _count: { _all: number };
+    }[]) {
       if (row.status in sprintByStatus) {
-        sprintByStatus[row.status as keyof typeof sprintByStatus] = row._count._all;
+        sprintByStatus[row.status as keyof typeof sprintByStatus] =
+          row._count._all;
       }
     }
 
     let pointsCommitted = 0;
     let pointsDone = 0;
-    for (const t of sprintPoints as { status: string; storyPoints: number | null }[]) {
+    for (const t of sprintPoints as {
+      status: string;
+      storyPoints: number | null;
+    }[]) {
       const pts = t.storyPoints ?? 0;
       pointsCommitted += pts;
       if (t.status === 'done') pointsDone += pts;
@@ -159,7 +171,9 @@ export class ProjectsService {
    * Velocity dos últimos sprints concluídos (Story 024).
    */
   async getVelocity(projectId: string, limit = 5) {
-    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
     if (!project) return null;
 
     const completed = await this.prisma.sprint.findMany({
@@ -192,7 +206,9 @@ export class ProjectsService {
       sprints.length === 0
         ? 0
         : Math.round(
-            (sprints.reduce((sum, s) => sum + s.pointsDone, 0) / sprints.length) * 10,
+            (sprints.reduce((sum, s) => sum + s.pointsDone, 0) /
+              sprints.length) *
+              10,
           ) / 10;
 
     return {
@@ -278,7 +294,8 @@ export class ProjectsService {
         const batch = (await res.json()) as GithubIssue[];
         const onlyIssues = batch.filter((i) => !i.pull_request);
         for (const issue of onlyIssues) {
-          if (issues.some((x) => x.githubIssueNumber === issue.number)) continue;
+          if (issues.some((x) => x.githubIssueNumber === issue.number))
+            continue;
           issues.push({
             kind: 'issue',
             title: issue.title,
@@ -438,9 +455,12 @@ export class ProjectsService {
       },
     });
 
-    let syncResult: Awaited<ReturnType<ProjectsService['syncGithubIssues']>> | {
-      error: string;
-    } | null = null;
+    let syncResult:
+      | Awaited<ReturnType<ProjectsService['syncGithubIssues']>>
+      | {
+          error: string;
+        }
+      | null = null;
     if (params.sync !== false) {
       try {
         syncResult = await this.syncGithubIssues(project.id);
@@ -486,11 +506,17 @@ function mapSyncItem(item: SyncItem) {
   let type = 'story';
   if (labels.some((l) => l.includes('bug') || l === 'defect')) type = 'bug';
   else if (labels.some((l) => l.includes('epic'))) type = 'epic';
-  else if (labels.some((l) => l.includes('task') || l.includes('chore'))) type = 'task';
-  else if (/^e\d+\s*·/i.test(item.title) && !/s\d+/i.test(item.title)) type = 'epic';
+  else if (labels.some((l) => l.includes('task') || l.includes('chore')))
+    type = 'task';
+  else if (/^e\d+\s*·/i.test(item.title) && !/s\d+/i.test(item.title))
+    type = 'epic';
 
   let priority = 'medium';
-  if (labels.some((l) => l.includes('critical') || l.includes('p0') || l === 'urgent')) {
+  if (
+    labels.some(
+      (l) => l.includes('critical') || l.includes('p0') || l === 'urgent',
+    )
+  ) {
     priority = 'high';
   } else if (labels.some((l) => l.includes('high') || l.includes('p1'))) {
     priority = 'high';
@@ -607,7 +633,7 @@ async function fetchGithubProjectStatuses(
       throw new Error(`GitHub GraphQL ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const json = (await res.json()) as any;
+    const json = await res.json();
     if (json.errors?.length) {
       // Org may 404 for user-owned projects — try continuing with user node
       const msg = json.errors.map((e: any) => e.message).join('; ');
@@ -732,7 +758,7 @@ async function githubGraphql(
     const text = await res.text();
     throw new Error(`GitHub GraphQL ${res.status}: ${text.slice(0, 200)}`);
   }
-  return (await res.json()) as any;
+  return await res.json();
 }
 
 async function listAccessibleGithubProjects(
@@ -776,7 +802,9 @@ async function listAccessibleGithubProjects(
     if (!viewer) throw new Error('Não foi possível listar projetos do GitHub.');
     viewerLogin = viewer.login || viewerLogin;
 
-    projects.push(...mapProjectNodes(viewer.projectsV2?.nodes || [], viewerLogin));
+    projects.push(
+      ...mapProjectNodes(viewer.projectsV2?.nodes || [], viewerLogin),
+    );
 
     if (!viewer.projectsV2?.pageInfo?.hasNextPage) break;
     after = viewer.projectsV2.pageInfo.endCursor;
