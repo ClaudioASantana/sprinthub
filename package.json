@@ -9,7 +9,8 @@
     "dev:frontend": "pnpm --filter frontend dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "lint:ci": "pnpm -r lint:ci"
   },
   "engines": {
     "node": ">=20.0.0",

@@ -3,6 +3,12 @@
   <p><strong>Plataforma SaaS de Gestão Ágil de Projetos e Times</strong></p>
 
   <p>
+    <a href="https://github.com/ClaudioASantana/sprinthub/actions/workflows/ci.yml">
+      <img src="https://github.com/ClaudioASantana/sprinthub/actions/workflows/ci.yml/badge.svg" alt="CI">
+    </a>
+  </p>
+
+  <p>
     <a href="#sobre-o-projeto">Sobre</a> •
     <a href="#arquitetura">Arquitetura</a> •
     <a href="#tecnologias">Tecnologias</a> •

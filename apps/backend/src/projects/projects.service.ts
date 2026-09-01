@@ -633,10 +633,10 @@ async function fetchGithubProjectStatuses(
       throw new Error(`GitHub GraphQL ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const json = await res.json();
+    const json = (await res.json()) as GithubGraphqlResponse;
     if (json.errors?.length) {
       // Org may 404 for user-owned projects — try continuing with user node
-      const msg = json.errors.map((e: any) => e.message).join('; ');
+      const msg = json.errors.map((e) => e.message).join('; ');
       if (!json.data?.organization?.projectV2 && !json.data?.user?.projectV2) {
         throw new Error(`GitHub Projects: ${msg}`);
       }
@@ -740,11 +740,22 @@ function mapProjectNodes(
   return out;
 }
 
+/**
+ * Resposta do GraphQL do GitHub. `data` fica como `any` de propósito: cada query
+ * deste arquivo tem um shape diferente e navegá-lo com optional chaining é o que
+ * já se faz aqui. O que importa tipar é `errors`, que é sempre igual e é de onde
+ * saíam retornos `any`.
+ */
+type GithubGraphqlResponse = {
+  data?: any;
+  errors?: Array<{ message: string }>;
+};
+
 async function githubGraphql(
   token: string,
   query: string,
   variables: Record<string, unknown>,
-) {
+): Promise<GithubGraphqlResponse> {
   const res = await fetch('https://api.github.com/graphql', {
     method: 'POST',
     headers: {
@@ -758,7 +769,7 @@ async function githubGraphql(
     const text = await res.text();
     throw new Error(`GitHub GraphQL ${res.status}: ${text.slice(0, 200)}`);
   }
-  return await res.json();
+  return (await res.json()) as GithubGraphqlResponse;
 }
 
 async function listAccessibleGithubProjects(
@@ -795,7 +806,7 @@ async function listAccessibleGithubProjects(
   while (pages < 3) {
     const json = await githubGraphql(token, viewerQuery, { after });
     if (json.errors?.length && !json.data?.viewer?.projectsV2) {
-      throw new Error(json.errors.map((e: any) => e.message).join('; '));
+      throw new Error(json.errors.map((e) => e.message).join('; '));
     }
 
     const viewer = json.data?.viewer;
@@ -933,7 +944,7 @@ async function fetchGithubProjectItems(
   const useNode = !!opts.projectNodeId;
 
   while (pages < 10) {
-    const json = useNode
+    const json: GithubGraphqlResponse = useNode
       ? await githubGraphql(token, byNodeQuery, {
           id: opts.projectNodeId,
           after,
@@ -951,7 +962,7 @@ async function fetchGithubProjectItems(
 
     if (!itemsConn) {
       if (json.errors?.length) {
-        throw new Error(json.errors.map((e: any) => e.message).join('; '));
+        throw new Error(json.errors.map((e) => e.message).join('; '));
       }
       throw new Error(
         useNode
