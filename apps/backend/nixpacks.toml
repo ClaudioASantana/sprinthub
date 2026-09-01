@@ -4,12 +4,17 @@ providers = ["node"]
   PRISMA_CLI_QUERY_ENGINE_TYPE = 'binary'
 
 [phases.install]
-  cmds = ['npx pnpm install --prod=false']
+  # pnpm fixado na major 11 (mesma do lockfile v9.0 / ambiente local).
+  # Sem o pin, o npx baixa o "latest" a cada build — a pnpm 12 reescreveu a CLI
+  # e passou a rejeitar a sintaxe `--prod=false`, quebrando a esteira inteira.
+  cmds = ['npx pnpm@11 install --prod=false']
 
 [phases.build]
   # Comandos declarados no backend que farão a build do NestJS e gerarão as tipagens do client prisma
-  cmds = ['npx pnpm run build']
+  cmds = ['npx pnpm@11 run build']
 
 [start]
-  # Script do package.json que agora contém (npx prisma migrate deploy && node dist/main)
-  cmd = 'npx pnpm run start:prod'
+  # Script do package.json que agora contém (npx prisma migrate deploy && node dist/main).
+  # Usa npm (já embutido no Node) em vez de npx pnpm: no runtime não há nada
+  # pra instalar, e assim o container não depende de baixar o pnpm a cada restart.
+  cmd = 'npm run start:prod'
