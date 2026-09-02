@@ -1,7 +1,7 @@
 ---
 title: "Story 031 — Isolamento de tenant pelo companyId do JWT"
 type: "story"
-status: "todo"
+status: "done"
 priority: "high"
 storyPoints: 5
 projectId: "project-sprinthub-core"
@@ -25,12 +25,12 @@ Isso é o oposto do que o `AGENTS.md` exige ("Respeite multi-tenancy — isolame
 
 ## Critérios de aceite
 
-- [ ] Decorator `@CurrentUser()` (ou equivalente) expõe o payload do JWT já tipado
-- [ ] Nenhuma controller aceita `companyId` de `@Query` ou `@Body` — auditado com grep no CI
-- [ ] Todo `findMany`/`findUnique` de recurso multi-tenant filtra por `companyId` do token
-- [ ] Acesso a recurso de outra empresa por ID direto retorna **404** (não 403 — 403 confirma que o recurso existe)
-- [ ] `super_admin` continua podendo atravessar tenants, por caminho explícito e separado
-- [ ] Testes: usuário da empresa A não lê, não edita e não apaga recurso da empresa B — um teste por recurso (projects, sprints, tasks, teams, users, comments)
+- [x] Decorator `@CurrentUser()` (ou equivalente) expõe o payload do JWT já tipado
+- [x] Nenhuma controller aceita `companyId` de `@Query` ou `@Body` — auditado com grep no CI
+- [x] Todo `findMany`/`findUnique` de recurso multi-tenant filtra por `companyId` do token
+- [x] Acesso a recurso de outra empresa por ID direto retorna **404** (não 403 — 403 confirma que o recurso existe)
+- [x] `super_admin` continua podendo atravessar tenants, por caminho explícito e separado
+- [x] Testes: usuário da empresa A não lê, não edita e não apaga recurso da empresa B — um teste por recurso (projects, sprints, tasks, teams, users, comments)
 
 ## File list
 
