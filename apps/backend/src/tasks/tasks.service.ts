@@ -6,10 +6,13 @@ import { Task } from '@prisma/client';
 export class TasksService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(filters?: {
-    projectId?: string;
-    sprintId?: string;
-  }): Promise<Task[]> {
+  async findAll(
+    filters?: {
+      projectId?: string;
+      sprintId?: string;
+    },
+    companyId?: string,
+  ): Promise<Task[]> {
     const where: any = {};
 
     if (filters?.projectId) {
@@ -24,6 +27,10 @@ export class TasksService {
       }
     }
 
+    if (companyId) {
+      where.project = { companyId };
+    }
+
     return this.prisma.task.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -35,9 +42,9 @@ export class TasksService {
     });
   }
 
-  async findOne(id: string): Promise<Task | null> {
-    return this.prisma.task.findUnique({
-      where: { id },
+  async findOne(id: string, companyId?: string): Promise<Task | null> {
+    return this.prisma.task.findFirst({
+      where: companyId ? { id, project: { companyId } } : { id },
       include: {
         sprint: true,
         assignee: true,
@@ -46,9 +53,12 @@ export class TasksService {
     });
   }
 
-  async findByProject(projectId: string): Promise<Task[]> {
+  async findByProject(
+    projectId: string,
+    companyId?: string,
+  ): Promise<Task[]> {
     return this.prisma.task.findMany({
-      where: { projectId },
+      where: companyId ? { projectId, project: { companyId } } : { projectId },
       include: {
         sprint: true,
         assignee: true,
@@ -57,9 +67,12 @@ export class TasksService {
     });
   }
 
-  async findBySprint(sprintId: string): Promise<Task[]> {
+  async findBySprint(
+    sprintId: string,
+    companyId?: string,
+  ): Promise<Task[]> {
     return this.prisma.task.findMany({
-      where: { sprintId },
+      where: companyId ? { sprintId, project: { companyId } } : { sprintId },
       include: {
         sprint: true,
         assignee: true,
@@ -89,11 +102,15 @@ export class TasksService {
     }
   }
 
-  async create(data: Partial<Task>): Promise<Task> {
+  async create(data: Partial<Task>, companyId?: string): Promise<Task> {
     if (data.projectId) {
-      const project = await this.prisma.project.findUnique({
-        where: { id: data.projectId },
-      });
+      const project = companyId
+        ? await this.prisma.project.findFirst({
+            where: { id: data.projectId, companyId },
+          })
+        : await this.prisma.project.findUnique({
+            where: { id: data.projectId },
+          });
       if (!project)
         throw new BadRequestException('Projeto fornecido não existe.');
     }
@@ -108,29 +125,41 @@ export class TasksService {
     return this.prisma.task.create({ data: data as any });
   }
 
-  async update(id: string, data: Partial<Task>): Promise<Task | null> {
+  async update(
+    id: string,
+    data: Partial<Task>,
+    companyId?: string,
+  ): Promise<Task | null> {
+    const current = await this.findOne(id, companyId);
+    if (!current) return null;
+
     if (data.projectId) {
-      const project = await this.prisma.project.findUnique({
-        where: { id: data.projectId },
-      });
+      const project = companyId
+        ? await this.prisma.project.findFirst({
+            where: { id: data.projectId, companyId },
+          })
+        : await this.prisma.project.findUnique({
+            where: { id: data.projectId },
+          });
       if (!project)
         throw new BadRequestException('Projeto fornecido não existe.');
     }
     if (data.sprintId) {
       // O projeto de destino é o novo (se veio no patch) ou o atual da tarefa.
-      const current = await this.prisma.task.findUnique({ where: { id } });
-      if (!current) throw new BadRequestException('Tarefa não existe.');
       await this.assertSprintBelongsToProject(
         data.sprintId,
         data.projectId ?? current.projectId,
       );
     }
     await this.prisma.task.update({ where: { id }, data: data as any });
-    return this.findOne(id);
+    return this.findOne(id, companyId);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, companyId?: string): Promise<boolean> {
+    const current = await this.findOne(id, companyId);
+    if (!current) return false;
     await this.prisma.task.delete({ where: { id } });
+    return true;
   }
 
   async addComment(
@@ -139,7 +168,7 @@ export class TasksService {
     authorId?: string,
     hints?: { email?: string; companyId?: string },
   ) {
-    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    const task = await this.findOne(taskId, hints?.companyId);
     if (!task) throw new BadRequestException('Tarefa fornecida não existe.');
 
     let user = authorId
@@ -177,7 +206,9 @@ export class TasksService {
     });
   }
 
-  async getComments(taskId: string) {
+  async getComments(taskId: string, companyId?: string) {
+    const task = await this.findOne(taskId, companyId);
+    if (!task) return null;
     return this.prisma.comment.findMany({
       where: { taskId },
       orderBy: { createdAt: 'asc' },

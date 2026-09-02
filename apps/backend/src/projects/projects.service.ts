@@ -19,17 +19,10 @@ export class ProjectsService {
     });
   }
 
-  async findOne(id: string): Promise<Project | null> {
-    return this.prisma.project.findUnique({
-      where: { id },
+  async findOne(id: string, companyId?: string): Promise<Project | null> {
+    return this.prisma.project.findFirst({
+      where: companyId ? { id, companyId } : { id },
       include: { company: true, sprints: true },
-    });
-  }
-
-  async findByCompany(companyId: string): Promise<Project[]> {
-    return this.prisma.project.findMany({
-      where: { companyId },
-      include: { sprints: true },
     });
   }
 
@@ -37,23 +30,30 @@ export class ProjectsService {
     return this.prisma.project.create({ data: data as any });
   }
 
-  async update(id: string, data: Partial<Project>): Promise<Project | null> {
+  async update(
+    id: string,
+    data: Partial<Project>,
+    companyId?: string,
+  ): Promise<Project | null> {
+    const current = await this.findOne(id, companyId);
+    if (!current) return null;
     await this.prisma.project.update({ where: { id }, data: data as any });
-    return this.findOne(id);
+    return this.findOne(id, companyId);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, companyId?: string): Promise<boolean> {
+    const current = await this.findOne(id, companyId);
+    if (!current) return false;
     await this.prisma.project.delete({ where: { id } });
+    return true;
   }
 
   /**
    * Métricas do projeto para Overview (Story 018).
    * Sprint ativo: status === 'active', senão janela de datas contendo agora.
    */
-  async getStats(projectId: string) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-    });
+  async getStats(projectId: string, companyId?: string) {
+    const project = await this.findOne(projectId, companyId);
     if (!project) {
       return null;
     }
@@ -170,10 +170,8 @@ export class ProjectsService {
   /**
    * Velocity dos últimos sprints concluídos (Story 024).
    */
-  async getVelocity(projectId: string, limit = 5) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-    });
+  async getVelocity(projectId: string, companyId?: string, limit = 5) {
+    const project = await this.findOne(projectId, companyId);
     if (!project) return null;
 
     const completed = await this.prisma.sprint.findMany({
@@ -224,10 +222,8 @@ export class ProjectsService {
    * Requer GITHUB_TOKEN (ou GH_TOKEN) no ambiente.
    * Aceita repo (owner/repo) e/ou Project # (owner + number).
    */
-  async syncGithubIssues(projectId: string) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-    });
+  async syncGithubIssues(projectId: string, companyId?: string) {
+    const project = await this.findOne(projectId, companyId);
     if (!project) return null;
 
     const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;

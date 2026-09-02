@@ -44,6 +44,11 @@ jobs:
       - name: Lint
         run: pnpm run lint:ci
 
+      # Story 031: garante que companyId nunca volta a vir de query/body do
+      # cliente em vez do JWT (ver apps/backend/scripts/audit-tenant-isolation.sh).
+      - name: Auditoria de isolamento de tenant
+        run: bash apps/backend/scripts/audit-tenant-isolation.sh
+
       - name: Testes
         run: pnpm run test
 

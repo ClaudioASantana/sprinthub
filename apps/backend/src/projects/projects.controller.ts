@@ -8,21 +8,19 @@ import {
   Delete,
   Query,
   NotFoundException,
-  Req,
-  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
+import { CurrentUser, AuthenticatedUser } from '../auth/decorators/current-user.decorator';
+import { tenantScope } from '../auth/tenant.util';
 
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @Get()
-  findAll(@Req() req: { user?: { companyId?: string; profile?: string } }) {
-    const companyId =
-      req.user?.profile === 'super_admin' ? undefined : req.user?.companyId;
-    return this.projectsService.findAll(companyId);
+  findAll(@CurrentUser() user: AuthenticatedUser) {
+    return this.projectsService.findAll(tenantScope(user));
   }
 
   @Get('github/list')
@@ -63,9 +61,9 @@ export class ProjectsController {
       teamId?: string;
       sync?: boolean;
     },
-    @Req() req: { user?: { companyId?: string; profile?: string } },
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    const companyId = req.user?.companyId;
+    const companyId = user?.companyId;
     if (!companyId) {
       throw new BadRequestException('Usuário sem companyId no token.');
     }
@@ -91,62 +89,70 @@ export class ProjectsController {
     }
   }
 
-  @Get('company/:companyId')
-  findByCompany(@Param('companyId') companyId: string) {
-    return this.projectsService.findByCompany(companyId);
-  }
-
   @Get(':id/stats')
   async getStats(
     @Param('id') id: string,
-    @Req() req: { user?: { companyId?: string; profile?: string } },
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    const stats = await this.projectsService.getStats(id);
+    const stats = await this.projectsService.getStats(id, tenantScope(user));
     if (!stats) {
       throw new NotFoundException('Project not found');
     }
-    this.assertTenant(req.user, stats.companyId);
     return stats;
   }
 
   @Get(':id/velocity')
   async getVelocity(
     @Param('id') id: string,
-    @Req() req: { user?: { companyId?: string; profile?: string } },
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    const velocity = await this.projectsService.getVelocity(id);
+    const velocity = await this.projectsService.getVelocity(
+      id,
+      tenantScope(user),
+    );
     if (!velocity) {
       throw new NotFoundException('Project not found');
     }
-    this.assertTenant(req.user, velocity.companyId);
     return velocity;
   }
 
   @Post(':id/github/sync')
   async syncGithub(
     @Param('id') id: string,
-    @Req() req: { user?: { companyId?: string; profile?: string } },
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    const project = await this.projectsService.findOne(id);
-    if (!project) throw new NotFoundException('Project not found');
-    this.assertTenant(req.user, project.companyId);
     try {
-      return await this.projectsService.syncGithubIssues(id);
+      const result = await this.projectsService.syncGithubIssues(
+        id,
+        tenantScope(user),
+      );
+      if (!result) throw new NotFoundException('Project not found');
+      return result;
     } catch (e: any) {
+      if (e instanceof NotFoundException) throw e;
       throw new BadRequestException(e?.message || 'GitHub sync failed');
     }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectsService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const project = await this.projectsService.findOne(id, tenantScope(user));
+    if (!project) throw new NotFoundException('Project not found');
+    return project;
   }
 
   @Post()
   create(
-    @Body() body: { name: string; description?: string; companyId: string },
+    @Body() body: { name: string; description?: string },
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.projectsService.create(body);
+    if (!user?.companyId) {
+      throw new BadRequestException('Usuário sem companyId no token.');
+    }
+    return this.projectsService.create({ ...body, companyId: user.companyId });
   }
 
   @Patch(':id')
@@ -160,29 +166,23 @@ export class ProjectsController {
       githubRepo: string;
       githubProjectNumber: number | null;
     }>,
-    @Req() req: { user?: { companyId?: string; profile?: string } },
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    const project = await this.projectsService.findOne(id);
+    const project = await this.projectsService.update(
+      id,
+      body as any,
+      tenantScope(user),
+    );
     if (!project) throw new NotFoundException('Project not found');
-    this.assertTenant(req.user, project.companyId);
-    return this.projectsService.update(id, body as any);
+    return project;
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.projectsService.delete(id);
-  }
-
-  private assertTenant(
-    user: { companyId?: string; profile?: string } | undefined,
-    companyId: string,
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    if (
-      user?.profile !== 'super_admin' &&
-      user?.companyId &&
-      companyId !== user.companyId
-    ) {
-      throw new ForbiddenException('Project outside tenant scope');
-    }
+    const deleted = await this.projectsService.delete(id, tenantScope(user));
+    if (!deleted) throw new NotFoundException('Project not found');
   }
 }

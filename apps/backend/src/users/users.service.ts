@@ -5,10 +5,9 @@ import { PrismaService } from '../prisma.service';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(companyId: string) {
-    if (!companyId) return [];
+  async findAll(companyId?: string) {
     return this.prisma.user.findMany({
-      where: { companyId },
+      where: companyId ? { companyId } : undefined,
       orderBy: { createdAt: 'desc' },
     });
   }
