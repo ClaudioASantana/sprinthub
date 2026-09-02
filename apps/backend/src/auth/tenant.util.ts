@@ -1,4 +1,4 @@
-import { AuthenticatedUser } from './decorators/current-user.decorator';
+import type { AuthenticatedUser } from './decorators/current-user.decorator';
 
 export function isSuperAdmin(user: AuthenticatedUser | undefined): boolean {
   return user?.profile === 'super_admin';

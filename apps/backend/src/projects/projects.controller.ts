@@ -11,7 +11,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
-import { CurrentUser, AuthenticatedUser } from '../auth/decorators/current-user.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/decorators/current-user.decorator';
 import { tenantScope } from '../auth/tenant.util';
 
 @Controller('projects')

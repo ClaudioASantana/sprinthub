@@ -12,7 +12,8 @@ import {
 import { SprintsService } from './sprints.service';
 import { CreateSprintDto } from './dto/create-sprint.dto';
 import { UpdateSprintDto } from './dto/update-sprint.dto';
-import { CurrentUser, AuthenticatedUser } from '../auth/decorators/current-user.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/decorators/current-user.decorator';
 import { tenantScope } from '../auth/tenant.util';
 
 @Controller('sprints')
