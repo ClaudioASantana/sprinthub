@@ -10,18 +10,15 @@ import {
   NotFoundException,
   Req,
   ForbiddenException,
-  UseGuards,
   BadRequestException,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   findAll(@Req() req: { user?: { companyId?: string; profile?: string } }) {
     const companyId =
       req.user?.profile === 'super_admin' ? undefined : req.user?.companyId;
@@ -29,7 +26,6 @@ export class ProjectsController {
   }
 
   @Get('github/list')
-  @UseGuards(JwtAuthGuard)
   async listGithub(
     @Query('org') org?: string | string[],
     @Query('orgs') orgsCsv?: string,
@@ -55,7 +51,6 @@ export class ProjectsController {
   }
 
   @Post('github/import')
-  @UseGuards(JwtAuthGuard)
   async importGithub(
     @Body()
     body: {
@@ -102,7 +97,6 @@ export class ProjectsController {
   }
 
   @Get(':id/stats')
-  @UseGuards(JwtAuthGuard)
   async getStats(
     @Param('id') id: string,
     @Req() req: { user?: { companyId?: string; profile?: string } },
@@ -116,7 +110,6 @@ export class ProjectsController {
   }
 
   @Get(':id/velocity')
-  @UseGuards(JwtAuthGuard)
   async getVelocity(
     @Param('id') id: string,
     @Req() req: { user?: { companyId?: string; profile?: string } },
@@ -130,7 +123,6 @@ export class ProjectsController {
   }
 
   @Post(':id/github/sync')
-  @UseGuards(JwtAuthGuard)
   async syncGithub(
     @Param('id') id: string,
     @Req() req: { user?: { companyId?: string; profile?: string } },
@@ -158,7 +150,6 @@ export class ProjectsController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
     @Body()

@@ -11,7 +11,11 @@ import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service';
+import { Public } from './decorators/public.decorator';
 
+// Todas as rotas aqui são, por natureza, o fluxo de obtenção do token —
+// não faz sentido exigir um token para conseguir um token.
+@Public()
 @Controller('auth')
 export class AuthController {
   constructor(

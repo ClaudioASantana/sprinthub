@@ -1,7 +1,7 @@
 ---
 title: "Story 034 — Pipeline de CI"
 type: "story"
-status: "in_progress"
+status: "done"
 priority: "high"
 storyPoints: 2
 projectId: "project-sprinthub-core"
@@ -27,7 +27,7 @@ O `AGENTS.md` define os quality gates (`pnpm run lint` + testes do pacote afetad
 - [x] `prisma generate` antes do lint e do build do backend
 - [x] Build do backend e dos dois frontends valida que o `dist/` sai
 - [x] Badge de status no `README.md`
-- [ ] Confirmar execução verde no GitHub Actions após o push
+- [x] Confirmar execução verde no GitHub Actions após o push
 
 ## File list
 
