@@ -16,11 +16,15 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/ (GET) — rota pública, responde 200 sem token', () => {
     return request(app.getHttpServer())
       .get('/')
       .expect(200)
       .expect('Hello World!');
+  });
+
+  it('/tasks (GET) — rota comum, responde 401 sem token', () => {
+    return request(app.getHttpServer()).get('/tasks').expect(401);
   });
 
   afterEach(async () => {

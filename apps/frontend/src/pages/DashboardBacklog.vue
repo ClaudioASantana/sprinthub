@@ -56,6 +56,7 @@
               draggable="true"
               @dragstart="onDragStart($event, task)"
               @dragend="onDragEnd"
+              @click="openModal(task)"
             >
               <td class="drag-handle" title="Arrastar para um sprint">⋮⋮</td>
               <td>
@@ -68,7 +69,7 @@
               <td>
                 <span class="story-points">{{ task.storyPoints || '-' }} pts</span>
               </td>
-              <td class="actions-cell">
+              <td class="actions-cell" @click.stop>
                 <select
                   class="move-select"
                   :value="''"
@@ -142,6 +143,27 @@
               <option value="low">Baixa</option>
               <option value="medium">Média</option>
               <option value="high">Alta</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Pontos</label>
+            <input
+              v-model.number="form.storyPoints"
+              type="number"
+              min="0"
+              class="dark-input"
+              placeholder="Ex: 5"
+            />
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select v-model="form.status" class="dark-input">
+              <option value="todo">A Fazer</option>
+              <option value="in_progress">Em Progresso</option>
+              <option value="done">Concluído</option>
             </select>
           </div>
         </div>
@@ -500,17 +522,22 @@ onMounted(async () => {
 }
 
 .backlog-row {
-  cursor: grab;
+  cursor: pointer;
 }
 
-.backlog-row:active {
-  cursor: grabbing;
+.backlog-row:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .drag-handle {
   color: var(--color-text-secondary);
   user-select: none;
   width: 28px;
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }
 
 .task-title-cell {

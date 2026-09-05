@@ -8,6 +8,7 @@ const API_TARGET = process.env.VITE_API_URL || 'http://localhost:3005'
 export default defineConfig({
   plugins: [vue()],
   server: {
+    host: true,
     port: 5174,
     proxy: {
       '/api': {

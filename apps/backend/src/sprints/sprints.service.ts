@@ -6,37 +6,57 @@ import { Sprint } from '@prisma/client';
 export class SprintsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(): Promise<Sprint[]> {
+  async findAll(companyId?: string): Promise<Sprint[]> {
     return this.prisma.sprint.findMany({
+      where: companyId ? { project: { companyId } } : undefined,
       include: { project: true, tasks: true },
     });
   }
 
-  async findOne(id: string): Promise<Sprint | null> {
-    return this.prisma.sprint.findUnique({
-      where: { id },
+  async findOne(id: string, companyId?: string): Promise<Sprint | null> {
+    return this.prisma.sprint.findFirst({
+      where: companyId ? { id, project: { companyId } } : { id },
       include: { project: true, tasks: true },
     });
   }
 
-  async findByProject(projectId: string): Promise<Sprint[]> {
+  async findByProject(
+    projectId: string,
+    companyId?: string,
+  ): Promise<Sprint[]> {
     return this.prisma.sprint.findMany({
-      where: { projectId },
+      where: companyId ? { projectId, project: { companyId } } : { projectId },
       include: { tasks: true },
     });
   }
 
-  async create(data: Partial<Sprint>): Promise<Sprint> {
+  async create(data: Partial<Sprint>, companyId?: string): Promise<Sprint> {
+    if (companyId) {
+      if (!data.projectId) {
+        throw new BadRequestException(
+          'projectId é obrigatório para criar uma Sprint.',
+        );
+      }
+      const project = await this.prisma.project.findFirst({
+        where: { id: data.projectId, companyId },
+      });
+      if (!project) {
+        throw new BadRequestException('Projeto fornecido não existe.');
+      }
+    }
     return this.prisma.sprint.create({ data: data as any });
   }
 
-  async update(id: string, data: Partial<Sprint>): Promise<Sprint | null> {
+  async update(
+    id: string,
+    data: Partial<Sprint>,
+    companyId?: string,
+  ): Promise<Sprint | null> {
+    const current = await this.findOne(id, companyId);
+    if (!current) return null;
+
     if (data.status) {
-      const currentSprint = await this.findOne(id);
-      if (!currentSprint) {
-        throw new BadRequestException('Sprint não encontrada.');
-      }
-      const currentStatus = currentSprint.status;
+      const currentStatus = current.status;
       const newStatus = data.status;
 
       // planning -> active -> completed/cancelled
@@ -53,17 +73,17 @@ export class SprintsService {
     }
 
     await this.prisma.sprint.update({ where: { id }, data: data as any });
-    return this.findOne(id);
+    return this.findOne(id, companyId);
   }
 
-  async delete(id: string): Promise<void> {
-    const sprint = await this.prisma.sprint.findUnique({
-      where: { id },
+  async delete(id: string, companyId?: string): Promise<boolean> {
+    const sprint = await this.prisma.sprint.findFirst({
+      where: companyId ? { id, project: { companyId } } : { id },
       include: { _count: { select: { tasks: true } } },
     });
 
     if (!sprint) {
-      throw new BadRequestException('Sprint não encontrada.');
+      return false;
     }
 
     if (sprint._count.tasks > 0) {
@@ -73,6 +93,7 @@ export class SprintsService {
     }
 
     await this.prisma.sprint.delete({ where: { id } });
+    return true;
   }
 
   /**
@@ -81,9 +102,11 @@ export class SprintsService {
    * Real: remaining estimado por dia usando updatedAt das tasks done
    * (aproximação — sem histórico de status dedicado).
    */
-  async getBurndown(sprintId: string) {
-    const sprint = await this.prisma.sprint.findUnique({
-      where: { id: sprintId },
+  async getBurndown(sprintId: string, companyId?: string) {
+    const sprint = await this.prisma.sprint.findFirst({
+      where: companyId
+        ? { id: sprintId, project: { companyId } }
+        : { id: sprintId },
       include: {
         tasks: {
           select: {

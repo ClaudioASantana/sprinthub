@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Team } from '@prisma/client';
 
@@ -14,10 +14,10 @@ export class TeamsService {
     });
   }
 
-  async findOne(id: string): Promise<Team> {
-    const team = await this.prisma.team.findUnique({ where: { id } });
-    if (!team) throw new NotFoundException(`Team ${id} not found`);
-    return team;
+  async findOne(id: string, companyId?: string): Promise<Team | null> {
+    return this.prisma.team.findFirst({
+      where: companyId ? { id, companyId } : { id },
+    });
   }
 
   async create(data: {
@@ -31,22 +31,40 @@ export class TeamsService {
   async update(
     id: string,
     data: { name?: string; description?: string; active?: boolean },
-  ): Promise<Team> {
+    companyId?: string,
+  ): Promise<Team | null> {
+    const current = await this.findOne(id, companyId);
+    if (!current) return null;
     return this.prisma.team.update({ where: { id }, data });
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, companyId?: string): Promise<boolean> {
+    const current = await this.findOne(id, companyId);
+    if (!current) return false;
     await this.prisma.team.update({ where: { id }, data: { active: false } });
+    return true;
   }
 
-  async addMember(teamId: string, userId: string) {
+  async addMember(teamId: string, userId: string, companyId?: string) {
+    const team = await this.findOne(teamId, companyId);
+    if (!team) return null;
+    const user = await this.prisma.user.findFirst({
+      where: companyId ? { id: userId, companyId } : { id: userId },
+    });
+    if (!user) return null;
     return this.prisma.user.update({
       where: { id: userId },
       data: { teamId },
     });
   }
 
-  async removeMember(teamId: string, userId: string) {
+  async removeMember(teamId: string, userId: string, companyId?: string) {
+    const team = await this.findOne(teamId, companyId);
+    if (!team) return null;
+    const user = await this.prisma.user.findFirst({
+      where: companyId ? { id: userId, companyId } : { id: userId },
+    });
+    if (!user) return null;
     return this.prisma.user.update({
       where: { id: userId },
       data: { teamId: null },

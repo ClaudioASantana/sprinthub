@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+# Um push novo na mesma branch cancela a execução anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Versão fixa de propósito: a raiz não tem campo `packageManager` e o
+      # lockfile é v9.0. Deixar flutuante já quebrou o deploy antes (pnpm 12
+      # rejeita `--prod=false`).
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      # O backend importa tipos do client gerado; sem isso o lint com
+      # type-checking e o build falham. Roda no workspace do backend porque a
+      # raiz tem prisma 8.0.0-rc e o backend usa 5.22.
+      - name: Gerar Prisma Client
+        run: pnpm --filter backend exec prisma generate
+
+      # `lint:ci` é o eslint sem `--fix`: no CI ele precisa falhar, não corrigir.
+      - name: Lint
+        run: pnpm run lint:ci
+
+      # Story 031: garante que companyId nunca volta a vir de query/body do
+      # cliente em vez do JWT (ver apps/backend/scripts/audit-tenant-isolation.sh).
+      - name: Auditoria de isolamento de tenant
+        run: bash apps/backend/scripts/audit-tenant-isolation.sh
+
+      - name: Testes
+        run: pnpm run test
+
+      - name: Build
+        run: pnpm run build

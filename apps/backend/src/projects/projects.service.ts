@@ -19,17 +19,10 @@ export class ProjectsService {
     });
   }
 
-  async findOne(id: string): Promise<Project | null> {
-    return this.prisma.project.findUnique({
-      where: { id },
+  async findOne(id: string, companyId?: string): Promise<Project | null> {
+    return this.prisma.project.findFirst({
+      where: companyId ? { id, companyId } : { id },
       include: { company: true, sprints: true },
-    });
-  }
-
-  async findByCompany(companyId: string): Promise<Project[]> {
-    return this.prisma.project.findMany({
-      where: { companyId },
-      include: { sprints: true },
     });
   }
 
@@ -37,23 +30,30 @@ export class ProjectsService {
     return this.prisma.project.create({ data: data as any });
   }
 
-  async update(id: string, data: Partial<Project>): Promise<Project | null> {
+  async update(
+    id: string,
+    data: Partial<Project>,
+    companyId?: string,
+  ): Promise<Project | null> {
+    const current = await this.findOne(id, companyId);
+    if (!current) return null;
     await this.prisma.project.update({ where: { id }, data: data as any });
-    return this.findOne(id);
+    return this.findOne(id, companyId);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, companyId?: string): Promise<boolean> {
+    const current = await this.findOne(id, companyId);
+    if (!current) return false;
     await this.prisma.project.delete({ where: { id } });
+    return true;
   }
 
   /**
    * Métricas do projeto para Overview (Story 018).
    * Sprint ativo: status === 'active', senão janela de datas contendo agora.
    */
-  async getStats(projectId: string) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-    });
+  async getStats(projectId: string, companyId?: string) {
+    const project = await this.findOne(projectId, companyId);
     if (!project) {
       return null;
     }
@@ -170,10 +170,8 @@ export class ProjectsService {
   /**
    * Velocity dos últimos sprints concluídos (Story 024).
    */
-  async getVelocity(projectId: string, limit = 5) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-    });
+  async getVelocity(projectId: string, companyId?: string, limit = 5) {
+    const project = await this.findOne(projectId, companyId);
     if (!project) return null;
 
     const completed = await this.prisma.sprint.findMany({
@@ -224,10 +222,8 @@ export class ProjectsService {
    * Requer GITHUB_TOKEN (ou GH_TOKEN) no ambiente.
    * Aceita repo (owner/repo) e/ou Project # (owner + number).
    */
-  async syncGithubIssues(projectId: string) {
-    const project = await this.prisma.project.findUnique({
-      where: { id: projectId },
-    });
+  async syncGithubIssues(projectId: string, companyId?: string) {
+    const project = await this.findOne(projectId, companyId);
     if (!project) return null;
 
     const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
@@ -633,10 +629,10 @@ async function fetchGithubProjectStatuses(
       throw new Error(`GitHub GraphQL ${res.status}: ${text.slice(0, 200)}`);
     }
 
-    const json = await res.json();
+    const json = (await res.json()) as GithubGraphqlResponse;
     if (json.errors?.length) {
       // Org may 404 for user-owned projects — try continuing with user node
-      const msg = json.errors.map((e: any) => e.message).join('; ');
+      const msg = json.errors.map((e) => e.message).join('; ');
       if (!json.data?.organization?.projectV2 && !json.data?.user?.projectV2) {
         throw new Error(`GitHub Projects: ${msg}`);
       }
@@ -740,11 +736,22 @@ function mapProjectNodes(
   return out;
 }
 
+/**
+ * Resposta do GraphQL do GitHub. `data` fica como `any` de propósito: cada query
+ * deste arquivo tem um shape diferente e navegá-lo com optional chaining é o que
+ * já se faz aqui. O que importa tipar é `errors`, que é sempre igual e é de onde
+ * saíam retornos `any`.
+ */
+type GithubGraphqlResponse = {
+  data?: any;
+  errors?: Array<{ message: string }>;
+};
+
 async function githubGraphql(
   token: string,
   query: string,
   variables: Record<string, unknown>,
-) {
+): Promise<GithubGraphqlResponse> {
   const res = await fetch('https://api.github.com/graphql', {
     method: 'POST',
     headers: {
@@ -758,7 +765,7 @@ async function githubGraphql(
     const text = await res.text();
     throw new Error(`GitHub GraphQL ${res.status}: ${text.slice(0, 200)}`);
   }
-  return await res.json();
+  return (await res.json()) as GithubGraphqlResponse;
 }
 
 async function listAccessibleGithubProjects(
@@ -795,7 +802,7 @@ async function listAccessibleGithubProjects(
   while (pages < 3) {
     const json = await githubGraphql(token, viewerQuery, { after });
     if (json.errors?.length && !json.data?.viewer?.projectsV2) {
-      throw new Error(json.errors.map((e: any) => e.message).join('; '));
+      throw new Error(json.errors.map((e) => e.message).join('; '));
     }
 
     const viewer = json.data?.viewer;
@@ -933,7 +940,7 @@ async function fetchGithubProjectItems(
   const useNode = !!opts.projectNodeId;
 
   while (pages < 10) {
-    const json = useNode
+    const json: GithubGraphqlResponse = useNode
       ? await githubGraphql(token, byNodeQuery, {
           id: opts.projectNodeId,
           after,
@@ -951,7 +958,7 @@ async function fetchGithubProjectItems(
 
     if (!itemsConn) {
       if (json.errors?.length) {
-        throw new Error(json.errors.map((e: any) => e.message).join('; '));
+        throw new Error(json.errors.map((e) => e.message).join('; '));
       }
       throw new Error(
         useNode

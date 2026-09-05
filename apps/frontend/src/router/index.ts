@@ -1,17 +1,26 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { parseJwt } from '../utils/jwt';
+import { ensureFreshToken, clearSession } from '../utils/api';
 
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router';
 
-const requireAuth = (_to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  const token = localStorage.getItem('token');
+// Story 032: ponto único onde a sessão é validada/renovada — cobre o boot
+// do app e toda navegação para as áreas logadas, sem precisar tocar nas
+// páginas que já fazem fetch direto com o token.
+const requireAuth = async (
+  _to: RouteLocationNormalized,
+  _from: RouteLocationNormalized,
+  next: NavigationGuardNext,
+) => {
+  const token = await ensureFreshToken();
   if (!token) {
+    clearSession();
     next('/login');
     return;
   }
   const payload = parseJwt(token);
   if (!payload) {
-    localStorage.removeItem('token');
+    clearSession();
     next('/login');
     return;
   }

@@ -7,26 +7,28 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { saveSession } from '../utils/api';
 
 const router = useRouter();
 const route = useRoute();
 
 onMounted(async () => {
   const code = route.query.code as string;
-  
+
   if (!code) {
     router.push('/login');
     return;
   }
 
   try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3005';
+    const apiUrl = import.meta.env.VITE_API_URL || '';
     const res = await fetch(`${apiUrl}/api/auth/tenant-callback?code=${code}`);
-    
+
     if (res.ok) {
       const data = await res.json();
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Story 032: tenant-callback ainda não emite refresh_token próprio —
+      // saveSession tolera undefined e fica pronto para quando emitir.
+      saveSession(data);
       router.push('/dashboard');
     } else {
       router.push('/login?error=auth_failed');
