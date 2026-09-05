@@ -36,6 +36,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.18",
     "@nestjs/schedule": "^4.1.2",
+    "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.1",
     "@octokit/rest": "^22.0.1",
     "@prisma/client": "^5.22.0",

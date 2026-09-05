@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "sprinthub": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "apps/backend/src/mcp-server/index.ts"
+      ],
+      "env": {
+        "DATABASE_URL": "postgresql://admin:admin_password@localhost:5434/sprinthub_dev"
+      }
+    }
+  }
+}

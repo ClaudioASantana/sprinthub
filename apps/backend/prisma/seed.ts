@@ -11,6 +11,7 @@ export const DEMO = {
   sprintPastId: 'sprint-core-past',
   sprintActiveId: 'sprint-core-active',
   users: {
+    admin: 'user-demo-admin',
     po: 'user-demo-po',
     dev1: 'user-demo-dev1',
     dev2: 'user-demo-dev2',
@@ -77,6 +78,26 @@ async function main() {
       description: 'Desenvolvimento Vue.js',
       active: true,
       companyId: company.id,
+    },
+  });
+
+  const userAdmin = await prisma.user.upsert({
+    where: { email: 'admin@sprinthub.com' },
+    update: {
+      name: 'Admin SprintHub',
+      role: 'super_admin',
+      active: true,
+      companyId: company.id,
+      teamId: team.id,
+    },
+    create: {
+      id: DEMO.users.admin,
+      email: 'admin@sprinthub.com',
+      name: 'Admin SprintHub',
+      role: 'super_admin',
+      active: true,
+      companyId: company.id,
+      teamId: team.id,
     },
   });
 
@@ -495,8 +516,8 @@ async function main() {
   console.log('Demo dogfood:');
   console.log(`  Project:  SprintHub Core (${DEMO.projectCoreId})`);
   console.log(`  Deep link board: /app/project/${DEMO.projectCoreId}`);
-  console.log(`  Users: po@demo.com, dev1@demo.com, dev2@demo.com`);
-  console.log(`  Login local: POST /api/auth/dev-login { "email": "po@demo.com", "role": "admin" }`);
+  console.log(`  Users: admin@sprinthub.com (super_admin), po@demo.com (admin), dev1@demo.com (member), dev2@demo.com (member)`);
+  console.log(`  Login local: POST /api/auth/dev-login { "email": "po@demo.com" } — role vem do banco, não do body`);
   console.log('');
   console.log('Re-seed:  make db-seed   |   cd apps/backend && npx prisma db seed');
   console.log('Reset DB+seed (dev):  make db-init');

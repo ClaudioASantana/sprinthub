@@ -8,6 +8,9 @@ const isConnecting = ref(false)
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
+// Story 032: bypass de dev só existe fora de produção — a proteção real é o
+// 404 do backend em produção, isso aqui só evita expor o botão na UI.
+const isDev = import.meta.env.DEV
 
 const handleLogin = async () => {
   if (!email.value || !password.value) {
@@ -57,7 +60,8 @@ const handleDevLogin = async () => {
     const res = await fetch(`${API_BASE_URL}/auth/dev-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'admin@sprinthub.com', role: 'super_admin' }),
+      // role/profile agora vêm sempre do registro do usuário no banco (Story 032).
+      body: JSON.stringify({ email: 'admin@sprinthub.com' }),
     });
     
     if (!res.ok) {
@@ -111,7 +115,7 @@ const handleDevLogin = async () => {
 
       <div class="footer">
         <p>Acesso restrito à equipe raiz.</p>
-        <button type="button" class="btn btn-outline dev-btn" @click="handleDevLogin" style="margin-top: 1rem; width: 100%;">
+        <button v-if="isDev" type="button" class="btn btn-outline dev-btn" @click="handleDevLogin" style="margin-top: 1rem; width: 100%;">
           🛠️ Dev Bypass (Entrar Direto)
         </button>
       </div>

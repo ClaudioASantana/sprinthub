@@ -14,7 +14,7 @@
           <span v-else>Entrar com Gestão de Acesso</span>
         </button>
 
-        <div class="dev-section">
+        <div v-if="isDev" class="dev-section">
           <p class="dev-label">Desenvolvimento</p>
           <button class="dev-btn btn btn-outline" @click="devLoginSuperAdmin">Entrar como Super Admin</button>
           <button class="dev-btn btn btn-outline" @click="devLoginMember">Entrar como Membro</button>
@@ -30,10 +30,15 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { parseJwt } from '../utils/jwt';
+import { saveSession } from '../utils/api';
 
 const router = useRouter();
 const loading = ref(false);
 const error = ref('');
+// Story 032: bypass de dev só existe fora de produção. VITE_ALLOW_DEV_LOGIN
+// (setado no build da imagem) reabre isso no deploy LAN enquanto não existe
+// um provedor de auth real — precisa bater com ALLOW_DEV_LOGIN no backend.
+const isDev = import.meta.env.DEV || import.meta.env.VITE_ALLOW_DEV_LOGIN === 'true';
 
 const login = () => {
   loading.value = true;
@@ -66,14 +71,20 @@ onMounted(() => {
 const devLoginSuperAdmin = async () => {
   loading.value = true;
   try {
-    const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:3005') + '/api/auth/dev-login', {
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/auth/dev-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'admin@sprinthub.com', role: 'super_admin' }),
+      // role/profile agora vêm sempre do registro do usuário no banco (Story 032).
+      body: JSON.stringify({ email: 'admin@sprinthub.com' }),
     });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
     const data = await res.json();
-    localStorage.setItem('token', data.access_token);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    saveSession(data);
     router.push('/dashboard');
   } catch (e: any) {
     error.value = 'Erro: ' + (e?.message || String(e));
@@ -85,20 +96,19 @@ const devLoginSuperAdmin = async () => {
 const devLoginMember = async () => {
   loading.value = true;
   try {
-    const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:3005') + '/api/auth/dev-login', {
+    const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/auth/dev-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'po@demo.com', role: 'member' }),
+      body: JSON.stringify({ email: 'po@demo.com' }),
     });
-    
+
     if (!res.ok) {
       const txt = await res.text();
       throw new Error(`HTTP ${res.status}: ${txt}`);
     }
 
     const data = await res.json();
-    localStorage.setItem('token', data.access_token);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    saveSession(data);
     router.push('/app');
   } catch (e: any) {
     error.value = 'Erro: ' + (e?.message || String(e));

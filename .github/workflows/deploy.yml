@@ -1,0 +1,27 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & deploy no servidor local
+    runs-on: self-hosted
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # O .env de produção vive só no servidor (não é commitado) e fica fora
+      # do workspace do runner — o actions/checkout apaga arquivos não
+      # rastreados do workspace a cada job, então o .env seria perdido.
+      - name: Subir containers
+        run: docker compose --env-file /home/gattsu/sprinthub-deploy/.env up -d --build
+
+      - name: Limpar imagens antigas
+        run: docker image prune -f
