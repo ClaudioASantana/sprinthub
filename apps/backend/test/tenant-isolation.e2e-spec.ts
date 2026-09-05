@@ -18,8 +18,24 @@ describe('Isolamento de tenant (e2e)', () => {
   let tokenB: string;
 
   const seed = {
-    companyA: { id: '', teamId: '', projectId: '', sprintId: '', taskId: '', userId: '', commentId: '' },
-    companyB: { id: '', teamId: '', projectId: '', sprintId: '', taskId: '', userId: '', commentId: '' },
+    companyA: {
+      id: '',
+      teamId: '',
+      projectId: '',
+      sprintId: '',
+      taskId: '',
+      userId: '',
+      commentId: '',
+    },
+    companyB: {
+      id: '',
+      teamId: '',
+      projectId: '',
+      sprintId: '',
+      taskId: '',
+      userId: '',
+      commentId: '',
+    },
   };
 
   async function seedCompany(suffix: 'A' | 'B') {
@@ -43,7 +59,11 @@ describe('Isolamento de tenant (e2e)', () => {
       },
     });
     const project = await prisma.project.create({
-      data: { name: `Project ${suffix}`, companyId: company.id, teamId: team.id },
+      data: {
+        name: `Project ${suffix}`,
+        companyId: company.id,
+        teamId: team.id,
+      },
     });
     const sprint = await prisma.sprint.create({
       data: {
@@ -54,10 +74,18 @@ describe('Isolamento de tenant (e2e)', () => {
       },
     });
     const task = await prisma.task.create({
-      data: { title: `Task ${suffix}`, projectId: project.id, sprintId: sprint.id },
+      data: {
+        title: `Task ${suffix}`,
+        projectId: project.id,
+        sprintId: sprint.id,
+      },
     });
     const comment = await prisma.comment.create({
-      data: { content: `Comment ${suffix}`, taskId: task.id, authorId: user.id },
+      data: {
+        content: `Comment ${suffix}`,
+        taskId: task.id,
+        authorId: user.id,
+      },
     });
 
     return {
@@ -117,19 +145,29 @@ describe('Isolamento de tenant (e2e)', () => {
   function authed(token: string) {
     return {
       get: (url: string) =>
-        request(app.getHttpServer()).get(url).set('Authorization', `Bearer ${token}`),
+        request(app.getHttpServer())
+          .get(url)
+          .set('Authorization', `Bearer ${token}`),
       post: (url: string) =>
-        request(app.getHttpServer()).post(url).set('Authorization', `Bearer ${token}`),
+        request(app.getHttpServer())
+          .post(url)
+          .set('Authorization', `Bearer ${token}`),
       patch: (url: string) =>
-        request(app.getHttpServer()).patch(url).set('Authorization', `Bearer ${token}`),
+        request(app.getHttpServer())
+          .patch(url)
+          .set('Authorization', `Bearer ${token}`),
       delete: (url: string) =>
-        request(app.getHttpServer()).delete(url).set('Authorization', `Bearer ${token}`),
+        request(app.getHttpServer())
+          .delete(url)
+          .set('Authorization', `Bearer ${token}`),
     };
   }
 
   describe('projects', () => {
     it('GET /projects/:id de outra empresa -> 404', () => {
-      return authed(tokenA).get(`/projects/${seed.companyB.projectId}`).expect(404);
+      return authed(tokenA)
+        .get(`/projects/${seed.companyB.projectId}`)
+        .expect(404);
     });
     it('PATCH /projects/:id de outra empresa -> 404', () => {
       return authed(tokenA)
@@ -138,18 +176,22 @@ describe('Isolamento de tenant (e2e)', () => {
         .expect(404);
     });
     it('DELETE /projects/:id de outra empresa -> 404', () => {
-      return authed(tokenA).delete(`/projects/${seed.companyB.projectId}`).expect(404);
+      return authed(tokenA)
+        .delete(`/projects/${seed.companyB.projectId}`)
+        .expect(404);
     });
     it('GET /projects não lista projetos de outra empresa', async () => {
       const res = await authed(tokenA).get('/projects').expect(200);
-      const ids = res.body.map((p: any) => p.id);
+      const ids = res.body.map((p: { id: string }) => p.id);
       expect(ids).not.toContain(seed.companyB.projectId);
     });
   });
 
   describe('sprints', () => {
     it('GET /sprints/:id de outra empresa -> 404', () => {
-      return authed(tokenA).get(`/sprints/${seed.companyB.sprintId}`).expect(404);
+      return authed(tokenA)
+        .get(`/sprints/${seed.companyB.sprintId}`)
+        .expect(404);
     });
     it('PATCH /sprints/:id de outra empresa -> 404', () => {
       return authed(tokenA)
@@ -158,14 +200,18 @@ describe('Isolamento de tenant (e2e)', () => {
         .expect(404);
     });
     it('DELETE /sprints/:id de outra empresa -> 404', () => {
-      return authed(tokenA).delete(`/sprints/${seed.companyB.sprintId}`).expect(404);
+      return authed(tokenA)
+        .delete(`/sprints/${seed.companyB.sprintId}`)
+        .expect(404);
     });
     it('GET /sprints/:id/burndown de outra empresa -> 404', () => {
-      return authed(tokenA).get(`/sprints/${seed.companyB.sprintId}/burndown`).expect(404);
+      return authed(tokenA)
+        .get(`/sprints/${seed.companyB.sprintId}/burndown`)
+        .expect(404);
     });
     it('GET /sprints não lista sprints de outra empresa', async () => {
       const res = await authed(tokenA).get('/sprints').expect(200);
-      const ids = res.body.map((s: any) => s.id);
+      const ids = res.body.map((s: { id: string }) => s.id);
       expect(ids).not.toContain(seed.companyB.sprintId);
     });
   });
@@ -181,7 +227,9 @@ describe('Isolamento de tenant (e2e)', () => {
         .expect(404);
     });
     it('DELETE /tasks/:id de outra empresa -> 404', () => {
-      return authed(tokenA).delete(`/tasks/${seed.companyB.taskId}`).expect(404);
+      return authed(tokenA)
+        .delete(`/tasks/${seed.companyB.taskId}`)
+        .expect(404);
     });
     it('POST /tasks/:id/comments em task de outra empresa -> 404', () => {
       return authed(tokenA)
@@ -190,11 +238,13 @@ describe('Isolamento de tenant (e2e)', () => {
         .expect(404);
     });
     it('GET /tasks/:id/comments de outra empresa -> 404', () => {
-      return authed(tokenA).get(`/tasks/${seed.companyB.taskId}/comments`).expect(404);
+      return authed(tokenA)
+        .get(`/tasks/${seed.companyB.taskId}/comments`)
+        .expect(404);
     });
     it('GET /tasks não lista tasks de outra empresa', async () => {
       const res = await authed(tokenA).get('/tasks').expect(200);
-      const ids = res.body.map((t: any) => t.id);
+      const ids = res.body.map((t: { id: string }) => t.id);
       expect(ids).not.toContain(seed.companyB.taskId);
     });
   });
@@ -210,7 +260,9 @@ describe('Isolamento de tenant (e2e)', () => {
         .expect(404);
     });
     it('DELETE /teams/:id de outra empresa -> 404', () => {
-      return authed(tokenA).delete(`/teams/${seed.companyB.teamId}`).expect(404);
+      return authed(tokenA)
+        .delete(`/teams/${seed.companyB.teamId}`)
+        .expect(404);
     });
     it('POST /teams/:id/members em time de outra empresa -> 404', () => {
       return authed(tokenA)
@@ -220,7 +272,7 @@ describe('Isolamento de tenant (e2e)', () => {
     });
     it('GET /teams não lista times de outra empresa', async () => {
       const res = await authed(tokenA).get('/teams').expect(200);
-      const ids = res.body.map((t: any) => t.id);
+      const ids = res.body.map((t: { id: string }) => t.id);
       expect(ids).not.toContain(seed.companyB.teamId);
     });
   });
@@ -228,7 +280,7 @@ describe('Isolamento de tenant (e2e)', () => {
   describe('users', () => {
     it('GET /users não lista usuários de outra empresa', async () => {
       const res = await authed(tokenA).get('/users').expect(200);
-      const ids = res.body.map((u: any) => u.id);
+      const ids = res.body.map((u: { id: string }) => u.id);
       expect(ids).not.toContain(seed.companyB.userId);
     });
 

@@ -53,10 +53,7 @@ export class TasksService {
     });
   }
 
-  async findByProject(
-    projectId: string,
-    companyId?: string,
-  ): Promise<Task[]> {
+  async findByProject(projectId: string, companyId?: string): Promise<Task[]> {
     return this.prisma.task.findMany({
       where: companyId ? { projectId, project: { companyId } } : { projectId },
       include: {
@@ -67,10 +64,7 @@ export class TasksService {
     });
   }
 
-  async findBySprint(
-    sprintId: string,
-    companyId?: string,
-  ): Promise<Task[]> {
+  async findBySprint(sprintId: string, companyId?: string): Promise<Task[]> {
     return this.prisma.task.findMany({
       where: companyId ? { sprintId, project: { companyId } } : { sprintId },
       include: {

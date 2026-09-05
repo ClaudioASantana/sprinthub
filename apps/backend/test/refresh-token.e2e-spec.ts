@@ -66,7 +66,9 @@ describe('POST /auth/refresh (e2e)', () => {
   });
 
   it('refresh válido gera par novo e revoga o antigo (reusar o antigo -> 401)', async () => {
-    const user = await prisma.user.findUniqueOrThrow({ where: { id: seed.userId } });
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: seed.userId },
+    });
     const original = await authService.issueTokenPair(user);
 
     const res = await request(app.getHttpServer())
@@ -120,6 +122,9 @@ describe('POST /auth/refresh (e2e)', () => {
   });
 
   it('sem refresh_token no body -> 401', async () => {
-    await request(app.getHttpServer()).post('/auth/refresh').send({}).expect(401);
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({})
+      .expect(401);
   });
 });

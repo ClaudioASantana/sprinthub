@@ -80,7 +80,9 @@ describe('POST /auth/dev-login (e2e)', () => {
       .send({ email: inexistente })
       .expect(401);
 
-    const created = await prisma.user.findUnique({ where: { email: inexistente } });
+    const created = await prisma.user.findUnique({
+      where: { email: inexistente },
+    });
     expect(created).toBeNull();
   });
 

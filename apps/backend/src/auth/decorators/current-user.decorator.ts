@@ -13,7 +13,9 @@ export interface AuthenticatedUser {
 // do token — este decorator só expõe esse valor tipado nos handlers.
 export const CurrentUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): AuthenticatedUser => {
-    const request = ctx.switchToHttp().getRequest();
+    const request = ctx
+      .switchToHttp()
+      .getRequest<{ user: AuthenticatedUser }>();
     return request.user;
   },
 );

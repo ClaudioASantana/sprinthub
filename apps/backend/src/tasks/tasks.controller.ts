@@ -26,7 +26,10 @@ export class TasksController {
     @Query('sprintId') sprintId: string | undefined,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.tasksService.findAll({ projectId, sprintId }, tenantScope(user));
+    return this.tasksService.findAll(
+      { projectId, sprintId },
+      tenantScope(user),
+    );
   }
 
   @Get(':id')

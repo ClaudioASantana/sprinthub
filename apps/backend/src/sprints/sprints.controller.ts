@@ -61,7 +61,10 @@ export class SprintsController {
   }
 
   @Post()
-  create(@Body() body: CreateSprintDto, @CurrentUser() user: AuthenticatedUser) {
+  create(
+    @Body() body: CreateSprintDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.sprintsService.create(
       {
         ...body,

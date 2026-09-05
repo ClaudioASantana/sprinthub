@@ -1,4 +1,7 @@
-import { assertJwtSecretConfigured, EXAMPLE_JWT_SECRET } from './jwt-secret.util';
+import {
+  assertJwtSecretConfigured,
+  EXAMPLE_JWT_SECRET,
+} from './jwt-secret.util';
 
 describe('assertJwtSecretConfigured', () => {
   it('lança se JWT_SECRET estiver ausente', () => {
